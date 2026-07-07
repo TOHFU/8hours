@@ -1,0 +1,149 @@
+.timer-round {
+  width: 185px;
+  height: 185px;
+  position: relative;
+  background-color: #eeeeee;
+  border-radius: 50%;
+  z-index: 0;
+
+  &::after {
+    content: "";
+    width: 182px;
+    height: 185px;
+    background-color: #dddddd;
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+  }
+}
+
+.dial-hour {
+  width: 1px;
+  height: 92.5px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform-origin: bottom center;
+
+  &::after {
+    content: "";
+    width: 1px;
+    height: 9px;
+    background-color: #111111;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  @for $i from 1 through 8 {
+    &:nth-child(#{$i}) {
+      transform: rotate(($i - 1) * 45deg);
+    }
+  }
+}
+
+.dial-quarter {
+  width: 1px;
+  height: 92.5px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform-origin: bottom center;
+
+  &::after {
+    content: "";
+    width: 1px;
+    height: 4px;
+    background-color: #111111;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  @for $i from 1 through 32 {
+    &:nth-child(#{$i}) {
+      transform: rotate(($i - 1) * 11.25deg);
+    }
+  }
+}
+
+.dial-number {
+  width: 4px;
+  height: 84px;
+  position: absolute;
+  top: 8px;
+  left: calc(50% - 2px);
+  transform-origin: bottom center;
+
+  @for $i from 1 through 8 {
+    &:nth-child(#{$i}) {
+      transform: rotate(($i) * 45deg);
+
+      &::after {
+        content: "#{$i}";
+        font-size: 13px;
+        font-weight: 600;
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%) rotate(($i) * -45deg);
+      }
+    }
+  }
+}
+
+.dial-number-15 {
+  font-size: 12px;
+  font-weight: 500;
+  position: relative;
+  top: 16px;
+  left: calc(50% - 4.5px);
+  color: #ff0084;
+  letter-spacing: 0.05em;
+}
+
+.timer-round-center {
+  width: 112px;
+  height: 112px;
+  background-color: #333333;
+  border-radius: 50%;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  &::after {
+    content: "";
+    width: 108px;
+    height: 112px;
+    background-color: #111111;
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+}
+
+.timer-round-center-time {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #eeeeee;
+  transform: translate(0, -1px);
+  pointer-events: none;
+  z-index: 1;
+  user-select: none;
+
+  &.time-15 {
+    color: #ff0084;
+  }
+}

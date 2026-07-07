@@ -3,7 +3,7 @@
   height: 200px;
   padding: 0;
   background: #111111;
-  border-radius: 32px 32px 32px 10px;
+  border-radius: 16px 32px 32px 10px;
   position: relative;
   display: flex;
   justify-content: center;
@@ -22,180 +22,47 @@
   }
 }
 
-.timer-round {
-  width: 185px;
-  height: 185px;
-  position: relative;
-  background-color: #eeeeee;
-  border-radius: 50%;
-  z-index: 0;
-  &::after {
-    content: "";
-    width: 182px;
-    height: 185px;
-    background-color: #DDDDDD;
-    border-radius: 50%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: -1;
-  }
-
-}
-
-.dial-hour {
-  width: 1px;
-  height: 92.5px;
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform-origin: bottom center;
-
-  &::after {
-    content: "";
-    width: 1px;
-    height: 9px;
-    background-color: #111111;
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  @for $i from 1 through 8 {
-    &:nth-child(#{$i}) {
-      transform: rotate(($i - 1) * 45deg);
-    }
-  }
-}
-
-.dial-quarter {
-  width: 1px;
-  height: 92.5px;
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform-origin: bottom center;
-
-  &::after {
-    content: "";
-    width: 1px;
-    height: 4px;
-    background-color: #111111;
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  @for $i from 1 through 32 {
-    &:nth-child(#{$i}) {
-      transform: rotate(($i - 1) * 11.25deg);
-    }
-  }
-}
-
-.dial-number {
-  width: 4px;
-  height: 83px;
-  position: absolute;
-  top: 9px;
-  left: calc(50% - 2px);
-  transform-origin: bottom center;
-
-  @for $i from 1 through 8 {
-    &:nth-child(#{$i}) {
-      transform: rotate(($i) * 45deg);
-
-      &::after {
-        content: "#{$i}";
-        font-size: 13px;
-        font-weight: 600;
-        display: block;
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%) rotate(($i) * -45deg);
-      }
-    }
-  }
-}
-.dial-number-15 {
-  font-size: 11px;
-  font-weight: 500;
-  position: relative;
-  top: 16px;
-  left: calc(50% - 3.5px);
-  color: #ff0084;
-}
-
-.timer-round-center {
-  width: 112px;
-  height: 112px;
-  background-color: #333333;
-  border-radius: 50%;
-  position: absolute;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  &::after {
-    content: "";
-    width: 108px;
-    height: 112px;
-    background-color: #111111;
-    border-radius: 50%;
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-}
-
-.timer-round-center-time {
-  font-size: 11px;
-  font-weight: 600;
-  color: #eeeeee;
-  transform: translate(0, -1px);
-  pointer-events: none;
-  z-index: 1;
-}
-
 .timer-15-btn {
   width: 20px;
   height: 20px;
   display: block;
   position: absolute;
-  top: 12px;
-  left: 16px;
+  top: 8px;
+  left: 10px;
   appearance: none;
-  background: #9D0051;
+  background: #AAAAAA;
   border: none;
   border-radius: 50%;
   padding: 3px 4px 5px 4px;
   margin: 0;
   cursor: pointer;
+
   &::before {
     content: "15";
-    font-weight: 700;
-    font-size: 12px;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.05em;
     line-height: 20px;
     font-family: "Barlow Condensed", sans-serif;
     color: #111111;
-    width: 22px;
+    width: 21px;
     height: 22px;
     top: 0px;
-    left: -5px;
-    background: #FF0084;
+    left: -3px;
+    background: #EEEEEE;
     border-radius: 50%;
     position: absolute;
   }
-  &:active {
-    &::before {
-      left: -4px;
-    }
+
+  &.is-active::before,
+  &:active::before {
+    left: -4px;
+  }
+  &.is-active {
+    background: #9d0051;
+  }
+  &.is-active::before {
+    background: #ff0084;
   }
 }
 
@@ -227,19 +94,17 @@
   }
 
   &:active {
-    &::after {
-      top: 18px;
-    }
+    transform: rotate(-90deg) translateY(1px);
   }
 }
 
 .timer-reset-btn {
-  color: #FF1E00;
+  color: #ff1e00;
   top: 42px;
 
   &::before {
     width: 24px;
-    background-color: #A91502;
+    background-color: #a91502;
     border-radius: 0px 0px 0px 16px;
   }
 
@@ -247,17 +112,32 @@
     left: 0px;
     top: 17px;
     width: 24px;
-    background-color: #FF1E00;
+    background-color: #ff1e00;
     border-radius: 0px 0px 0px 16px;
   }
 }
 
 .timer-pause-btn {
   color: #006fff;
-  top: 160px;
+  top: 140px;
+  left: -28px;
+  width: 54px;
+  height: 33px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &__label {
+    display: block;
+    width: 5ch;
+    text-align: center;
+    line-height: 1;
+    padding-bottom: 20px;
+  }
 
   &::before {
     width: 54px;
+    left: 0px;
     background-color: #004fb6;
     border-radius: 0px 0px 16px 0px;
   }

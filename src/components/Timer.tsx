@@ -1,50 +1,122 @@
+import { useEffect, useState } from "react";
+import {
+  EIGHT_HOURS_MS,
+  FIFTEEN_MINUTES_MS,
+  useTimer,
+} from "../hooks/useTimer";
+import { playToggleSound } from "../utils/playToggleSound";
 import TimerArc from "./TimerArc";
+import TimerRound from "./TimerRound";
 import "./Timer.scss";
 
 function Timer() {
-  const progress = 0.6;
-  const progress15 = 0.7;
+  const mainTimer = useTimer({ totalMs: EIGHT_HOURS_MS });
+  const subTimer = useTimer({
+    totalMs: FIFTEEN_MINUTES_MS,
+    autoStart: false,
+  });
+  const [isSubTimerActive, setIsSubTimerActive] = useState(false);
+
+  useEffect(() => {
+    if (subTimer.isFinished) {
+      setIsSubTimerActive(false);
+    }
+  }, [subTimer.isFinished]);
+
+  const handle15Click = () => {
+    playToggleSound();
+
+    if (isSubTimerActive) {
+      setIsSubTimerActive(false);
+      subTimer.clear();
+      return;
+    }
+
+    setIsSubTimerActive(true);
+    subTimer.reset();
+
+    if (!mainTimer.isRunning && mainTimer.remainingMs > 0) {
+      subTimer.togglePause();
+    }
+  };
+
+  const handleTogglePause = () => {
+    playToggleSound();
+
+    const willPause = mainTimer.isRunning;
+
+    mainTimer.togglePause();
+
+    if (!isSubTimerActive) {
+      return;
+    }
+
+    if (willPause && subTimer.isRunning) {
+      subTimer.togglePause();
+      return;
+    }
+
+    if (!willPause && subTimer.isPaused) {
+      subTimer.togglePause();
+    }
+  };
+
+  const handleReset = () => {
+    playToggleSound();
+
+    mainTimer.reset();
+    setIsSubTimerActive(false);
+    subTimer.clear();
+  };
 
   return (
     <div className="timer" data-tauri-drag-region>
-      <div className="timer-round">
-        <div className="timer-round-dial-hours">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <span key={index} className="dial-hour"></span>
-          ))}
-        </div>
-        <div className="timer-round-dial-quarters">
-          {Array.from({ length: 32 }).map((_, index) => (
-            <span key={index} className="dial-quarter"></span>
-          ))}
-        </div>
+      <TimerRound
+        mainTime={mainTimer.formattedTime}
+        subTime={subTimer.formattedTime}
+        showSubTimer={isSubTimerActive}
+      >
         <TimerArc
-          progress={progress}
+          progress={mainTimer.progress}
           radius={60}
           strokeWidth={40}
           stroke="#E1FF00"
           viewBoxSize={164}
         />
-        <TimerArc
-          progress={progress15}
-          radius={55}
-          strokeWidth={10}
-          stroke="#ff0084"
-          viewBoxSize={140}
-        />
-        <div className="timer-round-dial-number">
-          {Array.from({ length: 9 }).map((_, index) => (
-            <span key={index} className="dial-number"></span>
-          ))}
-          <span className="dial-number dial-number-15">15</span>
-        </div>
-        <div className="timer-round-center" data-tauri-drag-region>
-          <p className="timer-round-center-time">00:00:00</p>
-        </div>
-      </div>
-      <button className="timer-15-btn">15</button>
-      <button className="timer-reset-btn">RESET</button>
-      <button className="timer-pause-btn">PAUSE</button>
+        {isSubTimerActive && (
+          <TimerArc
+            progress={subTimer.progress}
+            radius={55}
+            strokeWidth={10}
+            stroke="#ff0084"
+            viewBoxSize={140}
+          />
+        )}
+      </TimerRound>
+      <button
+        type="button"
+        className={`timer-15-btn${isSubTimerActive ? " is-active" : ""}`}
+        aria-pressed={isSubTimerActive}
+        onClick={handle15Click}
+      >
+        15
+      </button>
+      <button
+        type="button"
+        className="timer-reset-btn"
+        onClick={handleReset}
+      >
+        RESET
+      </button>
+      <button
+        type="button"
+        className="timer-pause-btn"
+        onClick={handleTogglePause}
+      >
+        <span className="timer-pause-btn__label">
+          {mainTimer.isRunning ? "PAUSE" : "PLAY"}
+        </span>
+      </button>
     </div>
   );
 }

@@ -19,7 +19,8 @@
     "@tauri-apps/plugin-notification": "^2.3.3",
     "@tauri-apps/plugin-opener": "^2",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "snd-lib": "^1.2.4"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
