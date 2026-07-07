@@ -1,0 +1,215 @@
+.timer {
+  width: 200px;
+  height: 200px;
+  padding: 0;
+  background: #111111;
+  border-radius: 32px 32px 32px 10px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  &::after {
+    width: 200px;
+    height: 200px;
+    top: 0;
+    left: 3px;
+    background: #444444;
+    border-radius: 32px 32px 32px 10px;
+    position: absolute;
+    content: "";
+    z-index: -1;
+  }
+}
+
+.timer-round {
+  width: 185px;
+  height: 185px;
+  position: relative;
+  background-color: #eeeeee;
+  border-radius: 50%;
+}
+
+.dial-hour {
+  width: 1px;
+  height: 92.5px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform-origin: bottom center;
+
+  &::after {
+    content: "";
+    width: 1px;
+    height: 9px;
+    background-color: #111111;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  @for $i from 1 through 8 {
+    &:nth-child(#{$i}) {
+      transform: rotate(($i - 1) * 45deg);
+    }
+  }
+}
+
+.dial-quarter {
+  width: 1px;
+  height: 92.5px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform-origin: bottom center;
+
+  &::after {
+    content: "";
+    width: 1px;
+    height: 4px;
+    background-color: #111111;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  @for $i from 1 through 32 {
+    &:nth-child(#{$i}) {
+      transform: rotate(($i - 1) * 11.25deg);
+    }
+  }
+}
+
+.dial-number {
+  width: 4px;
+  height: 83px;
+  position: absolute;
+  top: 9px;
+  left: calc(50% - 2px);
+  transform-origin: bottom center;
+
+  @for $i from 1 through 8 {
+    &:nth-child(#{$i}) {
+      transform: rotate(($i) * 45deg);
+
+      &::after {
+        content: "#{$i}";
+        font-size: 13px;
+        font-weight: 600;
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%) rotate(($i) * -45deg);
+      }
+    }
+  }
+}
+
+.timer-round-center {
+  width: 112px;
+  height: 112px;
+  background-color: #333333;
+  border-radius: 50%;
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  &::after {
+    content: "";
+    width: 108px;
+    height: 112px;
+    background-color: #111111;
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+}
+
+.timer-round-center-time {
+  font-size: 11px;
+  font-weight: 600;
+  color: #eeeeee;
+  transform: translate(0, -1px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.timer-reset-btn,
+.timer-pause-btn {
+  display: block;
+  position: absolute;
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  transform: rotate(-90deg);
+  left: -30px;
+  font-size: 11px;
+  font-weight: 700;
+
+  &::before,
+  &::after {
+    top: 17px;
+    height: 5px;
+    content: "";
+    position: absolute;
+  }
+
+  &::before {
+    top: 20px;
+  }
+
+  &:active {
+    &::after {
+      top: 18px;
+    }
+  }
+}
+
+.timer-reset-btn {
+  color: #ff0084;
+  top: 42px;
+
+  &::before {
+    width: 24px;
+    background-color: #9d0051;
+    border-radius: 0px 0px 0px 16px;
+  }
+
+  &::after {
+    left: 0px;
+    top: 17px;
+    width: 24px;
+    background-color: #ff0084;
+    border-radius: 0px 0px 0px 16px;
+  }
+}
+
+.timer-pause-btn {
+  color: #006fff;
+  top: 160px;
+
+  &::before {
+    width: 54px;
+    background-color: #004fb6;
+    border-radius: 0px 0px 16px 0px;
+  }
+
+  &::after {
+    left: 0px;
+    top: 17px;
+    width: 54px;
+    background-color: #006fff;
+    border-radius: 0px 0px 16px 0px;
+  }
+}

@@ -1,9 +1,12 @@
 import Timer from "./components/Timer";
+import "./App.scss";
 
 function App() {
   return (
     <main className="app-shell">
-      <Timer />
+      <div className="timer-slot">
+        <Timer />
+      </div>
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import TimerArc from "./TimerArc";
+import "./Timer.scss";
 
 function Timer() {
   const progress = 0.6;

@@ -1,3 +1,5 @@
+import "./TimerArc.scss";
+
 type TimerArcProps = {
   progress: number;
   radius: number;
