@@ -16,5 +16,5 @@ export function playMainTimerEndSound(): void {
 }
 
 export function playSubTimerEndSound(): void {
-  playSoundRepeatedly(Snd.SOUNDS.PROGRESS_LOOP, 4);
+  snd.play(Snd.SOUNDS.RINGTONE_LOOP);
 }
