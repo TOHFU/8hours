@@ -5,8 +5,13 @@ import { createEmptyTodoItem, type TodoColor } from "../types/todo";
 import type { TodoItemData } from "../types/todo";
 import "./Todo.scss";
 
-function Todo() {
-  const [items, setItems] = useState<TodoItemData[]>(() => [createEmptyTodoItem()]);
+type TodoProps = {
+  initialItems: TodoItemData[];
+  onPersist: (items: TodoItemData[]) => void;
+};
+
+function Todo({ initialItems, onPersist }: TodoProps) {
+  const [items, setItems] = useState<TodoItemData[]>(() => initialItems);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
@@ -61,6 +66,10 @@ function Todo() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [closeMenu, dismissTransientUi, stopEditing]);
+
+  useEffect(() => {
+    onPersist(items);
+  }, [items, onPersist]);
 
   const handleAddItem = () => {
     setItems((currentItems) => [...currentItems, createEmptyTodoItem()]);

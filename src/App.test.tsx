@@ -1,6 +1,8 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import App from "./App";
 import { EIGHT_HOURS_MS, FIFTEEN_MINUTES_MS } from "./hooks/useTimer";
+import { saveAppState } from "./lib/appState";
+import { createDefaultAppState } from "./types/appState";
 import {
   playMainTimerEndSound,
   playSubTimerEndSound,
@@ -23,6 +25,7 @@ vi.mock("@tauri-apps/plugin-notification", () => ({
 
 describe("App", () => {
   beforeEach(() => {
+    window.localStorage.clear();
     vi.useFakeTimers();
   });
 
@@ -194,5 +197,27 @@ describe("App", () => {
     });
 
     expect(playSubTimerEndSound).toHaveBeenCalledTimes(1);
+  });
+
+  it("保存済みの状態からタイマーと TODO を復元する", () => {
+    const persistedState = createDefaultAppState();
+    persistedState.mainTimer = {
+      remainingMs: 3_600_000,
+      isRunning: false,
+      endTimeMs: null,
+    };
+    persistedState.todos[0] = {
+      id: "todo-1",
+      text: "保存済みタスク",
+      color: "pink",
+      checked: true,
+    };
+    saveAppState(persistedState);
+
+    render(<App />);
+
+    expect(screen.getByText("01:00:00")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "PLAY" })).toBeInTheDocument();
+    expect(screen.getByDisplayValue("保存済みタスク")).toBeInTheDocument();
   });
 });

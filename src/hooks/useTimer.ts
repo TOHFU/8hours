@@ -26,22 +26,69 @@ function getRemainingFromDeadline(
   return allowOverrun ? remainingMs : Math.max(0, remainingMs);
 }
 
+export type TimerInitialState = {
+  remainingMs: number;
+  isRunning: boolean;
+  endTimeMs?: number | null;
+};
+
+function resolveInitialTimerState(
+  totalMs: number,
+  autoStart: boolean,
+  allowOverrun: boolean,
+  initialState?: TimerInitialState,
+): {
+  endTimeMs: number | null;
+  remainingMs: number;
+  isRunning: boolean;
+} {
+  if (initialState) {
+    const { remainingMs, isRunning, endTimeMs = null } = initialState;
+
+    if (isRunning && endTimeMs !== null) {
+      return {
+        endTimeMs,
+        remainingMs: getRemainingFromDeadline(endTimeMs, allowOverrun),
+        isRunning: true,
+      };
+    }
+
+    return {
+      endTimeMs: null,
+      remainingMs,
+      isRunning: false,
+    };
+  }
+
+  return {
+    endTimeMs: autoStart ? Date.now() + totalMs : null,
+    remainingMs: totalMs,
+    isRunning: autoStart,
+  };
+}
+
 type UseTimerOptions = {
   totalMs?: number;
   autoStart?: boolean;
   allowOverrun?: boolean;
+  initialState?: TimerInitialState;
 };
 
 export function useTimer({
   totalMs = EIGHT_HOURS_MS,
   autoStart = true,
   allowOverrun = false,
+  initialState,
 }: UseTimerOptions = {}) {
-  const endTimeMsRef = useRef<number | null>(
-    autoStart ? Date.now() + totalMs : null,
+  const initialTimerState = resolveInitialTimerState(
+    totalMs,
+    autoStart,
+    allowOverrun,
+    initialState,
   );
-  const [remainingMs, setRemainingMs] = useState(totalMs);
-  const [isRunning, setIsRunning] = useState(autoStart);
+  const endTimeMsRef = useRef<number | null>(initialTimerState.endTimeMs);
+  const [remainingMs, setRemainingMs] = useState(initialTimerState.remainingMs);
+  const [isRunning, setIsRunning] = useState(initialTimerState.isRunning);
 
   const syncFromDeadline = useCallback(() => {
     const endTimeMs = endTimeMsRef.current;
@@ -119,6 +166,24 @@ export function useTimer({
     });
   }, [allowOverrun]);
 
+  const getPersistedState = useCallback((): TimerInitialState & { endTimeMs: number | null } => {
+    const endTimeMs = endTimeMsRef.current;
+
+    if (endTimeMs !== null) {
+      return {
+        remainingMs: getRemainingFromDeadline(endTimeMs, allowOverrun),
+        isRunning: true,
+        endTimeMs,
+      };
+    }
+
+    return {
+      remainingMs,
+      isRunning: false,
+      endTimeMs: null,
+    };
+  }, [allowOverrun, remainingMs]);
+
   return {
     remainingMs,
     progress: remainingMs / totalMs,
@@ -129,5 +194,6 @@ export function useTimer({
     reset,
     clear,
     togglePause,
+    getPersistedState,
   };
 }

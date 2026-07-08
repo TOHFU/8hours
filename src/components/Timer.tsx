@@ -4,6 +4,7 @@ import {
   FIFTEEN_MINUTES_MS,
   useTimer,
 } from "../hooks/useTimer";
+import type { PersistedAppState, PersistedTimerState } from "../types/appState";
 import {
   playMainTimerEndSound,
   playSubTimerEndSound,
@@ -13,15 +14,50 @@ import TimerArc from "./TimerArc";
 import TimerRound from "./TimerRound";
 import "./Timer.scss";
 
-function Timer() {
-  const mainTimer = useTimer({ totalMs: EIGHT_HOURS_MS, allowOverrun: true });
+type TimerProps = {
+  initialMainTimer: PersistedTimerState;
+  initialSubTimer: PersistedTimerState;
+  initialSubTimerActive: boolean;
+  onPersist: (
+    state: Pick<PersistedAppState, "mainTimer" | "subTimer" | "isSubTimerActive">,
+  ) => void;
+};
+
+function Timer({
+  initialMainTimer,
+  initialSubTimer,
+  initialSubTimerActive,
+  onPersist,
+}: TimerProps) {
+  const mainTimer = useTimer({
+    totalMs: EIGHT_HOURS_MS,
+    allowOverrun: true,
+    autoStart: false,
+    initialState: initialMainTimer,
+  });
   const subTimer = useTimer({
     totalMs: FIFTEEN_MINUTES_MS,
     autoStart: false,
+    initialState: initialSubTimer,
   });
-  const [isSubTimerActive, setIsSubTimerActive] = useState(false);
+  const [isSubTimerActive, setIsSubTimerActive] = useState(initialSubTimerActive);
   const previousMainRemainingMsRef = useRef(mainTimer.remainingMs);
   const previousSubFinishedRef = useRef(subTimer.isFinished);
+
+  useEffect(() => {
+    onPersist({
+      mainTimer: mainTimer.getPersistedState(),
+      subTimer: subTimer.getPersistedState(),
+      isSubTimerActive,
+    });
+  }, [
+    isSubTimerActive,
+    mainTimer.isRunning,
+    mainTimer.remainingMs,
+    onPersist,
+    subTimer.isRunning,
+    subTimer.remainingMs,
+  ]);
 
   useEffect(() => {
     if (subTimer.isFinished) {

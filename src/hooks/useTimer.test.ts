@@ -151,6 +151,54 @@ describe("useTimer", () => {
     expect(result.current.isFinished).toBe(true);
   });
 
+  it("initialState から停止中の残り時間を復元できる", () => {
+    const { result } = renderHook(() =>
+      useTimer({
+        totalMs: EIGHT_HOURS_MS,
+        autoStart: false,
+        initialState: {
+          remainingMs: 3_600_000,
+          isRunning: false,
+          endTimeMs: null,
+        },
+      }),
+    );
+
+    expect(result.current.formattedTime).toBe("01:00:00");
+    expect(result.current.isRunning).toBe(false);
+    expect(result.current.isPaused).toBe(true);
+  });
+
+  it("initialState の endTimeMs から実行中状態を復元できる", () => {
+    const endTimeMs = Date.now() + 5_000;
+
+    const { result } = renderHook(() =>
+      useTimer({
+        totalMs: EIGHT_HOURS_MS,
+        autoStart: false,
+        initialState: {
+          remainingMs: 5_000,
+          isRunning: true,
+          endTimeMs,
+        },
+      }),
+    );
+
+    expect(result.current.isRunning).toBe(true);
+    expect(result.current.formattedTime).toBe("00:00:05");
+
+    act(() => {
+      vi.advanceTimersByTime(2_000);
+    });
+
+    expect(result.current.formattedTime).toBe("00:00:03");
+    expect(result.current.getPersistedState()).toEqual({
+      remainingMs: 3_000,
+      isRunning: true,
+      endTimeMs,
+    });
+  });
+
   it("allowOverrun: true ではマイナス時間でも再開できる", () => {
     const { result } = renderHook(() =>
       useTimer({ totalMs: 2_000, allowOverrun: true }),
