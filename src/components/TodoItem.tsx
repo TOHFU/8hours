@@ -5,7 +5,7 @@ import TodoItemInput from "./TodoItemInput";
 import TodoItemMenu from "./TodoItemMenu";
 import "./TodoItem.scss";
 
-const FOLD_ANIMATION_MS = 300;
+const FOLD_ANIMATION_MS = 800;
 
 type TodoItemProps = {
   item: TodoItemData;
