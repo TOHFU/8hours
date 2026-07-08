@@ -1,59 +1,136 @@
+import { useCallback, useEffect, useState } from "react";
+import { Plus } from "lucide-react";
+import TodoItem from "./TodoItem";
+import { createEmptyTodoItem, type TodoColor } from "../types/todo";
+import type { TodoItemData } from "../types/todo";
 import "./Todo.scss";
-import { Ellipsis, Plus } from 'lucide-react';
 
 function Todo() {
+  const [items, setItems] = useState<TodoItemData[]>(() => [createEmptyTodoItem()]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  const stopEditing = useCallback(() => {
+    setEditingId(null);
+  }, []);
+
+  const closeMenu = useCallback(() => {
+    setOpenMenuId(null);
+  }, []);
+
+  const dismissTransientUi = useCallback(() => {
+    stopEditing();
+    closeMenu();
+  }, [closeMenu, stopEditing]);
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      if (!target.closest(".todo-item-menu")) {
+        closeMenu();
+      }
+
+      if (target.closest(".todo-item-input")) {
+        return;
+      }
+
+      stopEditing();
+    };
+
+    const handleAppDeactivate = () => {
+      dismissTransientUi();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        dismissTransientUi();
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("blur", handleAppDeactivate);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("blur", handleAppDeactivate);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [closeMenu, dismissTransientUi, stopEditing]);
+
+  const handleAddItem = () => {
+    setItems((currentItems) => [...currentItems, createEmptyTodoItem()]);
+  };
+
+  const handleTextChange = (id: string, text: string) => {
+    setItems((currentItems) =>
+      currentItems.map((item) => (item.id === id ? { ...item, text } : item)),
+    );
+  };
+
+  const handleToggleChecked = (id: string, checked: boolean) => {
+    setItems((currentItems) =>
+      currentItems.map((item) =>
+        item.id === id ? { ...item, checked } : item,
+      ),
+    );
+  };
+
+  const handleColorChange = (id: string, color: TodoColor) => {
+    setItems((currentItems) =>
+      currentItems.map((item) => (item.id === id ? { ...item, color } : item)),
+    );
+  };
+
+  const handleDelete = (id: string) => {
+    setItems((currentItems) => {
+      if (currentItems.length <= 1) {
+        return [createEmptyTodoItem()];
+      }
+
+      return currentItems.filter((item) => item.id !== id);
+    });
+    setOpenMenuId((currentId) => (currentId === id ? null : currentId));
+    setEditingId((currentId) => (currentId === id ? null : currentId));
+  };
+
+  const handleToggleMenu = (id: string) => {
+    setOpenMenuId((currentId) => (currentId === id ? null : id));
+  };
+
   return (
     <div className="todo">
       <ul className="todo-list">
-        <li className="todo-item is-black">
-          <input type="text" value="テストテスト" className="todo-item-input" readOnly/>
-          <div className="todo-item-menu is-open">
-            <Ellipsis className="todo-item-menu-icon" size={12} color="#DDDDDD"/>
-            <ul className="todo-item-menu-list">
-              <li className="todo-item-menu-list-item circle circle-black"></li>
-              <li className="todo-item-menu-list-item circle circle-red"></li>
-              <li className="todo-item-menu-list-item circle circle-blue"></li>
-              <li className="todo-item-menu-list-item circle circle-yellow"></li>
-              <li className="todo-item-menu-list-item circle circle-pink"></li>
-              <li className="todo-item-menu-list-item delete">DELETE</li>
-            </ul>
-          </div>
-          <input type="checkbox" className="todo-item-checkbox"/>
-        </li>
-        <li className="todo-item is-red">
-          <input type="text" value="テストテスト" className="todo-item-input" readOnly/>
-          <div className="todo-item-menu">
-            <Ellipsis className="todo-item-menu-icon" size={12} color="#DDDDDD"/>
-            <ul className="todo-item-menu-list">
-              <li className="todo-item-menu-list-item circle circle-black"></li>
-              <li className="todo-item-menu-list-item circle circle-red"></li>
-              <li className="todo-item-menu-list-item circle circle-blue"></li>
-              <li className="todo-item-menu-list-item circle circle-yellow"></li>
-              <li className="todo-item-menu-list-item circle circle-pink"></li>
-              <li className="todo-item-menu-list-item delete">DELETE</li>
-            </ul>
-          </div>
-          <input type="checkbox" className="todo-item-checkbox" />
-        </li>
-        <li className="todo-item is-blue">
-          <input type="text" value="テストテスト" className="todo-item-input" readOnly/>
-          <div className="todo-item-menu">
-            <Ellipsis className="todo-item-menu-icon" size={12} color="#DDDDDD"/>
-            <ul className="todo-item-menu-list">
-              <li className="todo-item-menu-list-item circle circle-black"></li>
-              <li className="todo-item-menu-list-item circle circle-red"></li>
-              <li className="todo-item-menu-list-item circle circle-blue"></li>
-              <li className="todo-item-menu-list-item circle circle-yellow"></li>
-              <li className="todo-item-menu-list-item circle circle-pink"></li>
-              <li className="todo-item-menu-list-item delete">DELETE</li>
-            </ul>
-          </div>
-          <input type="checkbox" className="todo-item-checkbox" />
-        </li>
+        {items.map((item) => (
+          <TodoItem
+            key={item.id}
+            item={item}
+            isEditing={editingId === item.id}
+            isMenuOpen={openMenuId === item.id}
+            onTextChange={(text) => handleTextChange(item.id, text)}
+            onStartEdit={() => setEditingId(item.id)}
+            onStopEdit={stopEditing}
+            onToggleMenu={() => handleToggleMenu(item.id)}
+            onColorChange={(color) => handleColorChange(item.id, color)}
+            onDelete={() => handleDelete(item.id)}
+            onToggleChecked={(checked) => handleToggleChecked(item.id, checked)}
+          />
+        ))}
       </ul>
-      <div className="todo-add-buton"><Plus size={16} color="#EEEEEE" /></div>
+      <button
+        type="button"
+        className="todo-add-buton"
+        aria-label="Add todo"
+        onClick={handleAddItem}
+      >
+        <Plus size={16} color="#EEEEEE" />
+      </button>
     </div>
-  )
+  );
 }
 
 export default Todo;

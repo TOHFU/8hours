@@ -1,0 +1,166 @@
+.todo-item {
+  width: 203px;
+  height: 17px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  position: relative;
+  padding: 0 6px 0 10px;
+  background: #DDDDDD;
+  border-radius: 16px 32px 0px 0px;
+  box-sizing: border-box;
+
+  &::after {
+    content: "";
+    width: 203px;
+    height: 16px;
+    top: 17px;
+    background: #111111;
+    border-radius: 0px 0px 32px 16px;
+    display: block;
+    position: absolute;
+    left: 0;
+    z-index: -1;
+  }
+
+  &.is-black {
+    background: #DDDDDD;
+
+    &::after {
+      background: #111111;
+    }
+  }
+
+  &.is-red {
+    background: #FF1E00;
+
+    &::after {
+      background: #A91502;
+    }
+  }
+
+  &.is-blue {
+    background: #006FFF;
+
+    &::after {
+      background: #004FB6;
+    }
+  }
+
+  &.is-yellow {
+    background: #E1FF00;
+
+    &::after {
+      background: #8B9D01;
+    }
+  }
+
+  &.is-pink {
+    background: #FF0084;
+
+    &::after {
+      background: #9D0051;
+    }
+  }
+}
+
+.todo-item-input {
+  position: relative;
+  appearance: none;
+  border: none;
+  background: transparent;
+  flex: 1;
+  min-width: 0;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 10px;
+  color: #111111;
+  padding: 0;
+  margin: 0;
+  top: -2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:read-only {
+    cursor: default;
+  }
+
+  &:not(:read-only) {
+    user-select: text;
+    -webkit-user-select: text;
+    text-overflow: clip;
+  }
+
+  &::placeholder {
+    color: rgba(17, 17, 17, 0.45);
+  }
+}
+
+.todo-item-checkbox {
+  position: relative;
+  width: 17px;
+  height: 17px;
+  top: 11px;
+  appearance: none;
+  background: #DDDDDD;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 transparent;
+  cursor: pointer;
+
+  &:checked {
+    &::after {
+      top: 2.5px;
+      left: 5.5px;
+      content: "";
+      width: 4px;
+      height: 8px;
+      position: absolute;
+      transform: rotate(45deg);
+      border-bottom: 2px solid #AAAAAA;
+      border-right: 2px solid #AAAAAA;
+    }
+  }
+
+  .is-black & {
+    background: #EEEEEE;
+
+    &:checked::after {
+      border-color: #111111;
+    }
+  }
+
+  .is-red & {
+    background: #FF8A7B;
+
+    &:checked::after {
+      border-color: #A91502;
+    }
+  }
+
+  .is-blue & {
+    background: #7AB4FF;
+
+    &:checked::after {
+      border-color: #004FB6;
+    }
+  }
+
+  .is-yellow & {
+    background: #F0FF82;
+
+    &:checked::after {
+      border-color: #8B9D01;
+    }
+  }
+
+  .is-pink & {
+    background: #FF75BC;
+
+    &:checked::after {
+      border-color: #9D0051;
+    }
+  }
+}
