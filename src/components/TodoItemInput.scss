@@ -1,0 +1,32 @@
+.todo-item-input {
+  position: relative;
+  appearance: none;
+  border: none;
+  background: transparent;
+  flex: 1;
+  min-width: 0;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 10px;
+  color: #111111;
+  padding: 0;
+  margin: 0;
+  top: -2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:read-only {
+    cursor: default;
+  }
+
+  &:not(:read-only) {
+    user-select: text;
+    -webkit-user-select: text;
+    text-overflow: clip;
+  }
+
+  &::placeholder {
+    color: rgba(17, 17, 17, 0.45);
+  }
+}

@@ -1,0 +1,66 @@
+.todo-item-checkbox {
+  position: relative;
+  width: 17px;
+  height: 17px;
+  top: 11px;
+  appearance: none;
+  background: #DDDDDD;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 transparent;
+  cursor: pointer;
+
+  &:checked {
+    &::after {
+      top: 2.5px;
+      left: 5.5px;
+      content: "";
+      width: 4px;
+      height: 8px;
+      position: absolute;
+      transform: rotate(45deg);
+      border-bottom: 2px solid #AAAAAA;
+      border-right: 2px solid #AAAAAA;
+    }
+  }
+
+  .is-black & {
+    background: #EEEEEE;
+
+    &:checked::after {
+      border-color: #111111;
+    }
+  }
+
+  .is-red & {
+    background: #FF8A7B;
+
+    &:checked::after {
+      border-color: #A91502;
+    }
+  }
+
+  .is-blue & {
+    background: #7AB4FF;
+
+    &:checked::after {
+      border-color: #004FB6;
+    }
+  }
+
+  .is-yellow & {
+    background: #F0FF82;
+
+    &:checked::after {
+      border-color: #8B9D01;
+    }
+  }
+
+  .is-pink & {
+    background: #FF75BC;
+
+    &:checked::after {
+      border-color: #9D0051;
+    }
+  }
+}

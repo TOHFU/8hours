@@ -1,0 +1,57 @@
+import { useEffect, useRef } from "react";
+import type { KeyboardEvent } from "react";
+import "./TodoItemInput.scss";
+
+type TodoItemInputProps = {
+  value: string;
+  isEditing: boolean;
+  onTextChange: (text: string) => void;
+  onStartEdit: () => void;
+  onStopEdit: () => void;
+};
+
+function TodoItemInput({
+  value,
+  isEditing,
+  onTextChange,
+  onStartEdit,
+  onStopEdit,
+}: TodoItemInputProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing) {
+      inputRef.current?.focus();
+    }
+  }, [isEditing]);
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter" || event.nativeEvent.isComposing) {
+      return;
+    }
+
+    event.preventDefault();
+    onStopEdit();
+  };
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      value={value}
+      placeholder="What needs to be done?"
+      className="todo-item-input"
+      readOnly={!isEditing}
+      onChange={(event) => onTextChange(event.target.value)}
+      onDoubleClick={() => {
+        if (!isEditing) {
+          onStartEdit();
+        }
+      }}
+      onBlur={onStopEdit}
+      onKeyDown={handleKeyDown}
+    />
+  );
+}
+
+export default TodoItemInput;
