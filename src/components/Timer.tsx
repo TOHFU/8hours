@@ -1,26 +1,51 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   EIGHT_HOURS_MS,
   FIFTEEN_MINUTES_MS,
   useTimer,
 } from "../hooks/useTimer";
+import {
+  playMainTimerEndSound,
+  playSubTimerEndSound,
+} from "../utils/playTimerEndSound";
 import { playToggleSound } from "../utils/playToggleSound";
 import TimerArc from "./TimerArc";
 import TimerRound from "./TimerRound";
 import "./Timer.scss";
 
 function Timer() {
-  const mainTimer = useTimer({ totalMs: EIGHT_HOURS_MS });
+  const mainTimer = useTimer({ totalMs: EIGHT_HOURS_MS, allowOverrun: true });
   const subTimer = useTimer({
     totalMs: FIFTEEN_MINUTES_MS,
     autoStart: false,
   });
   const [isSubTimerActive, setIsSubTimerActive] = useState(false);
+  const previousMainRemainingMsRef = useRef(mainTimer.remainingMs);
+  const previousSubFinishedRef = useRef(subTimer.isFinished);
 
   useEffect(() => {
     if (subTimer.isFinished) {
       setIsSubTimerActive(false);
     }
+  }, [subTimer.isFinished]);
+
+  useEffect(() => {
+    if (
+      previousMainRemainingMsRef.current > 0 &&
+      mainTimer.remainingMs <= 0
+    ) {
+      playMainTimerEndSound();
+    }
+
+    previousMainRemainingMsRef.current = mainTimer.remainingMs;
+  }, [mainTimer.remainingMs]);
+
+  useEffect(() => {
+    if (!previousSubFinishedRef.current && subTimer.isFinished) {
+      playSubTimerEndSound();
+    }
+
+    previousSubFinishedRef.current = subTimer.isFinished;
   }, [subTimer.isFinished]);
 
   const handle15Click = () => {
@@ -35,7 +60,7 @@ function Timer() {
     setIsSubTimerActive(true);
     subTimer.reset();
 
-    if (!mainTimer.isRunning && mainTimer.remainingMs > 0) {
+    if (!mainTimer.isRunning) {
       subTimer.togglePause();
     }
   };

@@ -12,6 +12,7 @@ describe("formatTime", () => {
     expect(formatTime(FIFTEEN_MINUTES_MS)).toBe("00:15:00");
     expect(formatTime(3_661_000)).toBe("01:01:01");
     expect(formatTime(0)).toBe("00:00:00");
+    expect(formatTime(-3_661_000)).toBe("-01:01:01");
   });
 });
 
@@ -133,5 +134,47 @@ describe("useTimer", () => {
     });
 
     expect(result.current.formattedTime).toBe("07:59:15");
+  });
+
+  it("allowOverrun: true では 0 秒を過ぎてもマイナス表示で進み続ける", () => {
+    const { result } = renderHook(() =>
+      useTimer({ totalMs: 2_000, allowOverrun: true }),
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(3_000);
+    });
+
+    expect(result.current.formattedTime).toBe("-00:00:01");
+    expect(result.current.progress).toBe(-0.5);
+    expect(result.current.isRunning).toBe(true);
+    expect(result.current.isFinished).toBe(true);
+  });
+
+  it("allowOverrun: true ではマイナス時間でも再開できる", () => {
+    const { result } = renderHook(() =>
+      useTimer({ totalMs: 2_000, allowOverrun: true }),
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(3_000);
+      result.current.togglePause();
+    });
+
+    expect(result.current.isRunning).toBe(false);
+    expect(result.current.isPaused).toBe(true);
+    expect(result.current.formattedTime).toBe("-00:00:01");
+
+    act(() => {
+      result.current.togglePause();
+    });
+
+    expect(result.current.isRunning).toBe(true);
+
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
+
+    expect(result.current.formattedTime).toBe("-00:00:02");
   });
 });

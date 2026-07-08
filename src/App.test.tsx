@@ -1,9 +1,18 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import App from "./App";
-import { FIFTEEN_MINUTES_MS } from "./hooks/useTimer";
+import { EIGHT_HOURS_MS, FIFTEEN_MINUTES_MS } from "./hooks/useTimer";
+import {
+  playMainTimerEndSound,
+  playSubTimerEndSound,
+} from "./utils/playTimerEndSound";
 
 vi.mock("./utils/playToggleSound", () => ({
   playToggleSound: vi.fn(),
+}));
+
+vi.mock("./utils/playTimerEndSound", () => ({
+  playMainTimerEndSound: vi.fn(),
+  playSubTimerEndSound: vi.fn(),
 }));
 
 vi.mock("@tauri-apps/plugin-notification", () => ({
@@ -19,6 +28,10 @@ describe("App", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
   it("8時間タイマーの初期表示を描画する", () => {
@@ -149,5 +162,37 @@ describe("App", () => {
     expect(screen.queryByText("00:14:59")).not.toBeInTheDocument();
     expect(subTimerButton).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByRole("button", { name: "PAUSE" })).toBeInTheDocument();
+  });
+
+  it("8時間タイマーは 0 秒以降もマイナス表示で進み、0 到達時に終了音を鳴らす", () => {
+    render(<App />);
+
+    act(() => {
+      vi.advanceTimersByTime(EIGHT_HOURS_MS);
+    });
+
+    expect(screen.getByText("00:00:00")).toBeInTheDocument();
+    expect(playMainTimerEndSound).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: "PAUSE" })).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(screen.getByText("-00:00:01")).toBeInTheDocument();
+    expect(playMainTimerEndSound).toHaveBeenCalledTimes(1);
+  });
+
+  it("15分タイマーは 0 到達時に終了音を1回だけ鳴らす", () => {
+    render(<App />);
+    const subTimerButton = screen.getByRole("button", { name: "15" });
+
+    fireEvent.click(subTimerButton);
+
+    act(() => {
+      vi.advanceTimersByTime(FIFTEEN_MINUTES_MS);
+    });
+
+    expect(playSubTimerEndSound).toHaveBeenCalledTimes(1);
   });
 });

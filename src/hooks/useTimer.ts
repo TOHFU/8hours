@@ -4,28 +4,38 @@ export const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
 export const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
 
 export function formatTime(ms: number): string {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const sign = ms < 0 ? "-" : "";
+  const totalSeconds = Math.floor(Math.abs(ms) / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
 
-  return [hours, minutes, seconds]
+  return (
+    sign +
+    [hours, minutes, seconds]
     .map((value) => String(value).padStart(2, "0"))
-    .join(":");
+      .join(":")
+  );
 }
 
-function getRemainingFromDeadline(endTimeMs: number): number {
-  return Math.max(0, endTimeMs - Date.now());
+function getRemainingFromDeadline(
+  endTimeMs: number,
+  allowOverrun: boolean,
+): number {
+  const remainingMs = endTimeMs - Date.now();
+  return allowOverrun ? remainingMs : Math.max(0, remainingMs);
 }
 
 type UseTimerOptions = {
   totalMs?: number;
   autoStart?: boolean;
+  allowOverrun?: boolean;
 };
 
 export function useTimer({
   totalMs = EIGHT_HOURS_MS,
   autoStart = true,
+  allowOverrun = false,
 }: UseTimerOptions = {}) {
   const endTimeMsRef = useRef<number | null>(
     autoStart ? Date.now() + totalMs : null,
@@ -39,14 +49,14 @@ export function useTimer({
       return;
     }
 
-    const nextRemainingMs = getRemainingFromDeadline(endTimeMs);
+    const nextRemainingMs = getRemainingFromDeadline(endTimeMs, allowOverrun);
     setRemainingMs(nextRemainingMs);
 
-    if (nextRemainingMs === 0) {
+    if (!allowOverrun && nextRemainingMs === 0) {
       endTimeMsRef.current = null;
       setIsRunning(false);
     }
-  }, []);
+  }, [allowOverrun]);
 
   useEffect(() => {
     if (!isRunning) {
@@ -91,29 +101,31 @@ export function useTimer({
 
   const togglePause = useCallback(() => {
     if (endTimeMsRef.current !== null) {
-      setRemainingMs(getRemainingFromDeadline(endTimeMsRef.current));
+      setRemainingMs(
+        getRemainingFromDeadline(endTimeMsRef.current, allowOverrun),
+      );
       endTimeMsRef.current = null;
       setIsRunning(false);
       return;
     }
 
     setRemainingMs((currentRemainingMs) => {
-      if (currentRemainingMs > 0) {
+      if (allowOverrun || currentRemainingMs > 0) {
         endTimeMsRef.current = Date.now() + currentRemainingMs;
         setIsRunning(true);
       }
 
       return currentRemainingMs;
     });
-  }, []);
+  }, [allowOverrun]);
 
   return {
     remainingMs,
     progress: remainingMs / totalMs,
     formattedTime: formatTime(remainingMs),
     isRunning,
-    isPaused: !isRunning && remainingMs > 0,
-    isFinished: remainingMs === 0,
+    isPaused: !isRunning && (allowOverrun || remainingMs > 0),
+    isFinished: allowOverrun ? remainingMs <= 0 : remainingMs === 0,
     reset,
     clear,
     togglePause,
