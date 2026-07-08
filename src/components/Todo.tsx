@@ -1,3 +1,4 @@
+import { useState } from "react";
 import TodoAddButton from "./TodoAddButton";
 import TodoList from "./TodoList";
 import { useTodoTransientUi } from "../hooks/useTodoTransientUi";
@@ -13,6 +14,12 @@ type TodoProps = {
 function Todo({ initialItems, onPersist }: TodoProps) {
   const todos = useTodos(initialItems, onPersist);
   const ui = useTodoTransientUi();
+  const [enteringItemId, setEnteringItemId] = useState<string | null>(null);
+
+  const handleAdd = () => {
+    const newItemId = todos.addItem();
+    setEnteringItemId(newItemId);
+  };
 
   const handleDelete = (id: string) => {
     todos.deleteItem(id);
@@ -25,6 +32,7 @@ function Todo({ initialItems, onPersist }: TodoProps) {
         items={todos.items}
         editingId={ui.editingId}
         openMenuId={ui.openMenuId}
+        enteringItemId={enteringItemId}
         onTextChange={todos.updateText}
         onStartEdit={ui.startEdit}
         onStopEdit={ui.stopEditing}
@@ -33,7 +41,7 @@ function Todo({ initialItems, onPersist }: TodoProps) {
         onDelete={handleDelete}
         onToggleChecked={todos.toggleChecked}
       />
-      <TodoAddButton onClick={todos.addItem} />
+      <TodoAddButton onClick={handleAdd} />
     </div>
   );
 }

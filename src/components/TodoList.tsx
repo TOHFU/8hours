@@ -6,6 +6,7 @@ type TodoListProps = {
   items: TodoItemData[];
   editingId: string | null;
   openMenuId: string | null;
+  enteringItemId: string | null;
   onTextChange: (id: string, text: string) => void;
   onStartEdit: (id: string) => void;
   onStopEdit: () => void;
@@ -19,6 +20,7 @@ function TodoList({
   items,
   editingId,
   openMenuId,
+  enteringItemId,
   onTextChange,
   onStartEdit,
   onStopEdit,
@@ -35,6 +37,8 @@ function TodoList({
           item={item}
           isEditing={editingId === item.id}
           isMenuOpen={openMenuId === item.id}
+          startFolded={item.id === enteringItemId}
+          skipDeleteAnimation={items.length === 1}
           onTextChange={(text) => onTextChange(item.id, text)}
           onStartEdit={() => onStartEdit(item.id)}
           onStopEdit={onStopEdit}

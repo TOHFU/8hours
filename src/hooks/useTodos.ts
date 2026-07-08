@@ -23,8 +23,10 @@ export function useTodos(
     onPersist(items);
   }, [items, onPersist]);
 
-  const addItem = useCallback(() => {
-    setItems((currentItems) => [...currentItems, createEmptyTodoItem()]);
+  const addItem = useCallback((): string => {
+    const newItem = createEmptyTodoItem();
+    setItems((currentItems) => [...currentItems, newItem]);
+    return newItem.id;
   }, []);
 
   const updateText = useCallback((id: string, text: string) => {

@@ -5,6 +5,7 @@ import { TODO_COLORS } from "../types/todo";
 import "./TodoItemMenu.scss";
 
 type TodoItemMenuProps = {
+  className?: string;
   isOpen: boolean;
   onToggleMenu: () => void;
   onColorChange: (color: TodoColor) => void;
@@ -12,6 +13,7 @@ type TodoItemMenuProps = {
 };
 
 function TodoItemMenu({
+  className = "todo-item-menu",
   isOpen,
   onToggleMenu,
   onColorChange,
@@ -34,7 +36,7 @@ function TodoItemMenu({
 
   return (
     <div
-      className={`todo-item-menu${isOpen ? " is-open" : ""}`}
+      className={`${className}${isOpen ? " is-open" : ""}`}
       onClick={handleMenuClick}
     >
       <Ellipsis className="todo-item-menu-icon" size={12} color="#DDDDDD" />

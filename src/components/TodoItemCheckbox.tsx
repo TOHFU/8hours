@@ -2,11 +2,16 @@ import { playToggleOffSound, playToggleOnSound } from "../utils/playToggleSound"
 import "./TodoItemCheckbox.scss";
 
 type TodoItemCheckboxProps = {
+  className?: string;
   checked: boolean;
   onToggleChecked: (checked: boolean) => void;
 };
 
-function TodoItemCheckbox({ checked, onToggleChecked }: TodoItemCheckboxProps) {
+function TodoItemCheckbox({
+  className = "todo-item-checkbox",
+  checked,
+  onToggleChecked,
+}: TodoItemCheckboxProps) {
   const handleChange = () => {
     const nextChecked = !checked;
     if (nextChecked) {
@@ -20,7 +25,7 @@ function TodoItemCheckbox({ checked, onToggleChecked }: TodoItemCheckboxProps) {
   return (
     <input
       type="checkbox"
-      className="todo-item-checkbox"
+      className={className}
       checked={checked}
       onChange={handleChange}
     />

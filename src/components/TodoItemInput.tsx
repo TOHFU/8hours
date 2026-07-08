@@ -3,6 +3,7 @@ import type { KeyboardEvent } from "react";
 import "./TodoItemInput.scss";
 
 type TodoItemInputProps = {
+  className?: string;
   value: string;
   isEditing: boolean;
   onTextChange: (text: string) => void;
@@ -11,6 +12,7 @@ type TodoItemInputProps = {
 };
 
 function TodoItemInput({
+  className = "todo-item-input",
   value,
   isEditing,
   onTextChange,
@@ -40,7 +42,7 @@ function TodoItemInput({
       type="text"
       value={value}
       placeholder="What needs to be done?"
-      className="todo-item-input"
+      className={className}
       readOnly={!isEditing}
       onChange={(event) => onTextChange(event.target.value)}
       onDoubleClick={() => {
