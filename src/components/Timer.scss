@@ -33,18 +33,18 @@
   background: #AAAAAA;
   border: none;
   border-radius: 50%;
-  padding: 3px 4px 5px 4px;
+  padding: 3px 6px 5px 2px;
   margin: 0;
   cursor: pointer;
-
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  line-height: 16px;
+  font-family: "Barlow Condensed", sans-serif;
+  color: #111111;
+  z-index: 1;
   &::before {
-    content: "15";
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0.05em;
-    line-height: 20px;
-    font-family: "Barlow Condensed", sans-serif;
-    color: #111111;
+    content: "";
     width: 21px;
     height: 22px;
     top: 0px;
@@ -52,6 +52,7 @@
     background: #EEEEEE;
     border-radius: 50%;
     position: absolute;
+    z-index: -1;
   }
 
   &.is-active::before,
@@ -60,6 +61,7 @@
   }
   &.is-active {
     background: #9d0051;
+    padding: 3px 8px 5px 2px;
   }
   &.is-active::before {
     background: #ff0084;
