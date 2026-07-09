@@ -1,7 +1,6 @@
 .todo-item {
   width: 203px;
   height: 17px;
-  margin-bottom: 16px;
   display: flex;
   gap: 4px;
   align-items: flex-end;
@@ -10,8 +9,9 @@
   background: #DDDDDD;
   border-radius: 16px 32px 0px 0px;
   box-sizing: border-box;
-  transition: height 0.4s ease-in-out, margin-bottom 0.4s ease-in-out;
+  transition: height 0.2s ease-in-out, margin-bottom 0.2s ease-in-out;
   will-change: height, margin-bottom;
+
   &::after {
     content: "";
     width: 203px;
@@ -21,27 +21,51 @@
     border-radius: 0px 0px 32px 16px;
     display: block;
     position: absolute;
-    transition: height 0.4s ease-in-out, transform 0.4s ease-in-out;
+    transition: height 0.2s ease-in-out, transform 0.2s ease-in-out;
     transform: translateY();
     left: 0;
     z-index: -1;
     will-change: height, transform;
   }
+
+  // animation: collapse list gap while folding (not list spacing)
   &.is-folded {
     height: 0;
-    margin-bottom: 0;
+    margin-bottom: -16px;
+
     &::after {
       transform: translateY(-17px);
       height: 0;
     }
-    .todo-item-menu, .todo-item-checkbox,.todo-item-input {
+
+    .todo-item-menu,
+    .todo-item-checkbox,
+    .todo-item-input {
       opacity: 0;
       transition: opacity 0s ease-in-out;
     }
   }
-  .todo-item-menu, .todo-item-checkbox,.todo-item-input {
+
+  .todo-item-menu,
+  .todo-item-checkbox,
+  .todo-item-input {
     opacity: 1;
-    transition: opacity 0s ease-in-out 0.4s;
+    transition: opacity 0s ease-in-out 0.2s;
+  }
+
+  // layout: child placement
+  .todo-item-menu {
+    position: absolute;
+    bottom: -15px;
+    left: 10px;
+  }
+
+  .todo-item-checkbox {
+    top: 11px;
+  }
+
+  .todo-item-input {
+    top: -2px;
   }
 
   &.is-black {

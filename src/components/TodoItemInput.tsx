@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
+import { playTapSound } from "../utils/playTapSound";
 import "./TodoItemInput.scss";
 
 type TodoItemInputProps = {
@@ -47,6 +48,7 @@ function TodoItemInput({
       onChange={(event) => onTextChange(event.target.value)}
       onDoubleClick={() => {
         if (!isEditing) {
+          playTapSound();
           onStartEdit();
         }
       }}

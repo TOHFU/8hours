@@ -3,7 +3,7 @@ import TodoAddButton from "./TodoAddButton";
 import TodoList from "./TodoList";
 import { useTodoTransientUi } from "../hooks/useTodoTransientUi";
 import { useTodos } from "../hooks/useTodos";
-import { playTransitionUpSound } from "../utils/playTransitionSound";
+import { playToggleOnSound } from "../utils/playToggleSound";
 import type { TodoItemData } from "../types/todo";
 import "./Todo.scss";
 
@@ -18,7 +18,7 @@ function Todo({ initialItems, onPersist }: TodoProps) {
   const [enteringItemId, setEnteringItemId] = useState<string | null>(null);
 
   const handleAdd = () => {
-    playTransitionUpSound();
+    playToggleOnSound();
     const newItemId = todos.addItem();
     setEnteringItemId(newItemId);
   };

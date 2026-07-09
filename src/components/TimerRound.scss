@@ -17,6 +17,14 @@
     left: 0;
     z-index: -1;
   }
+
+  // layout: arc placement
+  .timer-circle-container {
+    position: absolute;
+    top: 49.6%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
 }
 
 .dial-hour {

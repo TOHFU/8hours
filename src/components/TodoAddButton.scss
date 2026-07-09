@@ -9,4 +9,9 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  line-height: 0;
+
+  svg {
+    display: block;
+  }
 }

@@ -18,6 +18,14 @@ vi.mock("./utils/playSelectSound", () => ({
   playSelectSound: vi.fn(),
 }));
 
+vi.mock("./utils/playTapSound", () => ({
+  playTapSound: vi.fn(),
+}));
+
+vi.mock("./utils/playSwipeSound", () => ({
+  playSwipeSound: vi.fn(),
+}));
+
 vi.mock("./utils/playCelebrationSound", () => ({
   playCelebrationSound: vi.fn(),
 }));

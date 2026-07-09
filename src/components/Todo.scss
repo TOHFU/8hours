@@ -4,5 +4,9 @@
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: 20px;
+}
+
+// layout: reserve cap space below last item (replaces former todo-item margin-bottom)
+.todo-add-buton {
+  margin-top: 16px;
 }

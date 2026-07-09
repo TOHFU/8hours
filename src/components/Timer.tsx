@@ -10,7 +10,10 @@ import {
   playSubTimerEndSound,
 } from "../utils/playTimerEndSound";
 import { playToggleOffSound, playToggleOnSound, playToggleSound } from "../utils/playToggleSound";
+import Timer15Button from "./Timer15Button";
 import TimerArc from "./TimerArc";
+import TimerPauseButton from "./TimerPauseButton";
+import TimerResetButton from "./TimerResetButton";
 import TimerRound from "./TimerRound";
 import "./Timer.scss";
 
@@ -152,36 +155,18 @@ function Timer({
           <TimerArc
             progress={subTimer.progress}
             radius={55}
-            strokeWidth={10}
+            strokeWidth={12}
             stroke="#ff0084"
             viewBoxSize={140}
           />
         )}
       </TimerRound>
-      <button
-        type="button"
-        className={`timer-15-btn${isSubTimerActive ? " is-active" : ""}`}
-        aria-pressed={isSubTimerActive}
-        onClick={handle15Click}
-      >
-        15
-      </button>
-      <button
-        type="button"
-        className="timer-reset-btn"
-        onClick={handleReset}
-      >
-        RESET
-      </button>
-      <button
-        type="button"
-        className="timer-pause-btn"
+      <Timer15Button isActive={isSubTimerActive} onClick={handle15Click} />
+      <TimerResetButton onClick={handleReset} />
+      <TimerPauseButton
+        label={mainTimer.isRunning ? "PAUSE" : "PLAY"}
         onClick={handleTogglePause}
-      >
-        <span className="timer-pause-btn__label">
-          {mainTimer.isRunning ? "PAUSE" : "PLAY"}
-        </span>
-      </button>
+      />
     </div>
   );
 }
