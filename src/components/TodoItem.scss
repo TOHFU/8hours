@@ -10,7 +10,7 @@
   background: #DDDDDD;
   border-radius: 16px 32px 0px 0px;
   box-sizing: border-box;
-  transition: height 0.8s ease-in-out, margin-bottom 0.8s ease-in-out;
+  transition: height 0.4s ease-in-out, margin-bottom 0.4s ease-in-out;
   will-change: height, margin-bottom;
   &::after {
     content: "";
@@ -21,7 +21,7 @@
     border-radius: 0px 0px 32px 16px;
     display: block;
     position: absolute;
-    transition: height 0.8s ease-in-out, transform 0.8s ease-in-out;
+    transition: height 0.4s ease-in-out, transform 0.4s ease-in-out;
     transform: translateY();
     left: 0;
     z-index: -1;
@@ -41,7 +41,7 @@
   }
   .todo-item-menu, .todo-item-checkbox,.todo-item-input {
     opacity: 1;
-    transition: opacity 0s ease-in-out 0.9s;
+    transition: opacity 0s ease-in-out 0.4s;
   }
 
   &.is-black {

@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import type { TodoColor, TodoItemData } from "../types/todo";
+import { playTransitionDownSound } from "../utils/playTransitionSound";
 import TodoItemCheckbox from "./TodoItemCheckbox";
 import TodoItemInput from "./TodoItemInput";
 import TodoItemMenu from "./TodoItemMenu";
 import "./TodoItem.scss";
 
-const FOLD_ANIMATION_MS = 800;
+const FOLD_ANIMATION_MS = 400;
 
 type TodoItemProps = {
   item: TodoItemData;
@@ -68,6 +69,8 @@ function TodoItem({
   }, []);
 
   const handleDelete = () => {
+    playTransitionDownSound();
+
     if (skipDeleteAnimation) {
       onDelete();
       return;

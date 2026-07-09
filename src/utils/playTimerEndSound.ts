@@ -1,8 +1,8 @@
 import Snd from "snd-lib";
-import { snd } from "../lib/snd";
+import { playSound } from "../lib/snd";
 
 function playSoundRepeatedly(soundKey: string, remainingCount: number): void {
-  snd.play(soundKey, {
+  playSound(soundKey, {
     callback: () => {
       if (remainingCount > 1) {
         playSoundRepeatedly(soundKey, remainingCount - 1);
@@ -16,5 +16,5 @@ export function playMainTimerEndSound(): void {
 }
 
 export function playSubTimerEndSound(): void {
-  snd.play(Snd.SOUNDS.RINGTONE_LOOP);
+  playSound(Snd.SOUNDS.RINGTONE_LOOP);
 }

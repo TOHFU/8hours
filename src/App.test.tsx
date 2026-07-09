@@ -10,6 +10,21 @@ import {
 
 vi.mock("./utils/playToggleSound", () => ({
   playToggleSound: vi.fn(),
+  playToggleOnSound: vi.fn(),
+  playToggleOffSound: vi.fn(),
+}));
+
+vi.mock("./utils/playSelectSound", () => ({
+  playSelectSound: vi.fn(),
+}));
+
+vi.mock("./utils/playCelebrationSound", () => ({
+  playCelebrationSound: vi.fn(),
+}));
+
+vi.mock("./utils/playTransitionSound", () => ({
+  playTransitionUpSound: vi.fn(),
+  playTransitionDownSound: vi.fn(),
 }));
 
 vi.mock("./utils/playTimerEndSound", () => ({

@@ -2,6 +2,7 @@ import type { MouseEvent } from "react";
 import { Ellipsis } from "lucide-react";
 import type { TodoColor } from "../types/todo";
 import { TODO_COLORS } from "../types/todo";
+import { playSelectSound } from "../utils/playSelectSound";
 import "./TodoItemMenu.scss";
 
 type TodoItemMenuProps = {
@@ -26,6 +27,7 @@ function TodoItemMenu({
 
   const handleColorClick = (event: MouseEvent, color: TodoColor) => {
     event.stopPropagation();
+    playSelectSound();
     onColorChange(color);
   };
 

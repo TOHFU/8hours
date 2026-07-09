@@ -9,7 +9,7 @@ import {
   playMainTimerEndSound,
   playSubTimerEndSound,
 } from "../utils/playTimerEndSound";
-import { playToggleSound } from "../utils/playToggleSound";
+import { playToggleOffSound, playToggleOnSound, playToggleSound } from "../utils/playToggleSound";
 import TimerArc from "./TimerArc";
 import TimerRound from "./TimerRound";
 import "./Timer.scss";
@@ -85,14 +85,14 @@ function Timer({
   }, [subTimer.isFinished]);
 
   const handle15Click = () => {
-    playToggleSound();
-
     if (isSubTimerActive) {
+      playToggleOffSound();
       setIsSubTimerActive(false);
       subTimer.clear();
       return;
     }
 
+    playToggleOnSound();
     setIsSubTimerActive(true);
     subTimer.reset();
 
@@ -102,9 +102,13 @@ function Timer({
   };
 
   const handleTogglePause = () => {
-    playToggleSound();
-
     const willPause = mainTimer.isRunning;
+
+    if (willPause) {
+      playToggleOffSound();
+    } else {
+      playToggleOnSound();
+    }
 
     mainTimer.togglePause();
 

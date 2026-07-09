@@ -1,4 +1,5 @@
-import { playToggleOffSound, playToggleOnSound } from "../utils/playToggleSound";
+import { playCelebrationSound } from "../utils/playCelebrationSound";
+import { playToggleOffSound } from "../utils/playToggleSound";
 import "./TodoItemCheckbox.scss";
 
 type TodoItemCheckboxProps = {
@@ -15,7 +16,7 @@ function TodoItemCheckbox({
   const handleChange = () => {
     const nextChecked = !checked;
     if (nextChecked) {
-      playToggleOnSound();
+      playCelebrationSound();
     } else {
       playToggleOffSound();
     }
