@@ -1,5 +1,5 @@
-import audioSource from "snd-lib/dist/audioSource";
 import type Snd from "snd-lib";
+import audioSource from "snd-lib/dist/audioSource";
 
 export type PlayOptions = {
   index?: number | null;
@@ -31,13 +31,13 @@ type SndInternal = {
   _soundKit: SndSoundKit;
 };
 
-type AudioSourceStatic = typeof audioSource & {
+type AudioSourceStatic = {
   _ctx: AudioContext | null;
   isActive: boolean;
   activate: () => void;
 };
 
-const AudioSource = audioSource as AudioSourceStatic;
+const AudioSource = audioSource as unknown as AudioSourceStatic;
 
 export function getSoundKit(snd: Snd): SndSoundKit {
   return (snd as unknown as SndInternal)._soundKit;
@@ -55,7 +55,8 @@ export async function resumeSndAudioContext(): Promise<void> {
   const ctx = AudioSource._ctx;
   if (!ctx) return;
 
-  if (ctx.state === "suspended" || ctx.state === "interrupted") {
+  const state = ctx.state as AudioContextState | "interrupted";
+  if (state === "suspended" || state === "interrupted") {
     await ctx.resume();
   }
 }
