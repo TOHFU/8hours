@@ -42,19 +42,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CI: true
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: v__VERSION__
           releaseName: 8hours v__VERSION__
           releaseBody: |
-            macOS (Apple Silicon) 向け DMG です。
+            macOS (Apple Silicon) 向け DMG です（アドホック署名、公証なし）。
 
             `src-tauri/tauri.conf.json` の version と一致する `v*` タグを push すると Release が作成されます。
+
+            **注意:** 有料 Apple Developer Program 未加入のため、初回起動時に Gatekeeper の警告が出る場合があります。
+            右クリック →「開く」から起動してください。
           releaseDraft: false
           prerelease: false
           args: --target aarch64-apple-darwin --bundles dmg
