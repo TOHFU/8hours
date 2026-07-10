@@ -3,6 +3,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
 export const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
 
+/** 1 tick 分のズレまでを「リアルタイムで 0 秒通過」とみなす */
+const NATURAL_ZERO_CROSS_MAX_MS = 1_500;
+
 export function formatTime(ms: number): string {
   const sign = ms < 0 ? "-" : "";
   const totalSeconds = Math.floor(Math.abs(ms) / 1000);
@@ -72,6 +75,7 @@ type UseTimerOptions = {
   autoStart?: boolean;
   allowOverrun?: boolean;
   initialState?: TimerInitialState;
+  onNaturalZeroCross?: () => void;
 };
 
 export function useTimer({
@@ -79,6 +83,7 @@ export function useTimer({
   autoStart = true,
   allowOverrun = false,
   initialState,
+  onNaturalZeroCross,
 }: UseTimerOptions = {}) {
   const initialTimerState = resolveInitialTimerState(
     totalMs,
@@ -89,6 +94,13 @@ export function useTimer({
   const endTimeMsRef = useRef<number | null>(initialTimerState.endTimeMs);
   const [remainingMs, setRemainingMs] = useState(initialTimerState.remainingMs);
   const [isRunning, setIsRunning] = useState(initialTimerState.isRunning);
+  const previousRemainingRef = useRef(initialTimerState.remainingMs);
+  const lastSyncAtRef = useRef(Date.now());
+  const onNaturalZeroCrossRef = useRef(onNaturalZeroCross);
+
+  useEffect(() => {
+    onNaturalZeroCrossRef.current = onNaturalZeroCross;
+  }, [onNaturalZeroCross]);
 
   const syncFromDeadline = useCallback(() => {
     const endTimeMs = endTimeMsRef.current;
@@ -96,7 +108,23 @@ export function useTimer({
       return;
     }
 
+    const now = Date.now();
+    const elapsedSinceLastSync = now - lastSyncAtRef.current;
+    lastSyncAtRef.current = now;
+
+    const previousRemainingMs = previousRemainingRef.current;
     const nextRemainingMs = getRemainingFromDeadline(endTimeMs, allowOverrun);
+
+    if (
+      onNaturalZeroCrossRef.current &&
+      previousRemainingMs > 0 &&
+      nextRemainingMs <= 0 &&
+      elapsedSinceLastSync <= NATURAL_ZERO_CROSS_MAX_MS
+    ) {
+      onNaturalZeroCrossRef.current();
+    }
+
+    previousRemainingRef.current = nextRemainingMs;
     setRemainingMs(nextRemainingMs);
 
     if (!allowOverrun && nextRemainingMs === 0) {
@@ -109,6 +137,12 @@ export function useTimer({
     if (!isRunning) {
       return;
     }
+
+    lastSyncAtRef.current = Date.now();
+    previousRemainingRef.current =
+      endTimeMsRef.current !== null
+        ? getRemainingFromDeadline(endTimeMsRef.current, allowOverrun)
+        : remainingMs;
 
     syncFromDeadline();
 
@@ -132,25 +166,31 @@ export function useTimer({
       window.removeEventListener("focus", handleResume);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [isRunning, syncFromDeadline]);
+  }, [allowOverrun, isRunning, syncFromDeadline]);
 
   const reset = useCallback(() => {
     endTimeMsRef.current = Date.now() + totalMs;
+    previousRemainingRef.current = totalMs;
+    lastSyncAtRef.current = Date.now();
     setRemainingMs(totalMs);
     setIsRunning(true);
   }, [totalMs]);
 
   const clear = useCallback(() => {
     endTimeMsRef.current = null;
+    previousRemainingRef.current = totalMs;
     setRemainingMs(totalMs);
     setIsRunning(false);
   }, [totalMs]);
 
   const togglePause = useCallback(() => {
     if (endTimeMsRef.current !== null) {
-      setRemainingMs(
-        getRemainingFromDeadline(endTimeMsRef.current, allowOverrun),
+      const pausedRemainingMs = getRemainingFromDeadline(
+        endTimeMsRef.current,
+        allowOverrun,
       );
+      previousRemainingRef.current = pausedRemainingMs;
+      setRemainingMs(pausedRemainingMs);
       endTimeMsRef.current = null;
       setIsRunning(false);
       return;
@@ -159,6 +199,8 @@ export function useTimer({
     setRemainingMs((currentRemainingMs) => {
       if (allowOverrun || currentRemainingMs > 0) {
         endTimeMsRef.current = Date.now() + currentRemainingMs;
+        previousRemainingRef.current = currentRemainingMs;
+        lastSyncAtRef.current = Date.now();
         setIsRunning(true);
       }
 

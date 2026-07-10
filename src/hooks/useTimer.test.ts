@@ -225,4 +225,68 @@ describe("useTimer", () => {
 
     expect(result.current.formattedTime).toBe("-00:00:02");
   });
+
+  it("0 秒通過時に onNaturalZeroCross を呼ぶ", () => {
+    const onNaturalZeroCross = vi.fn();
+
+    renderHook(() =>
+      useTimer({ totalMs: 2_000, onNaturalZeroCross }),
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(2_000);
+    });
+
+    expect(onNaturalZeroCross).toHaveBeenCalledTimes(1);
+  });
+
+  it("長時間の復帰で 0 秒通過済みのとき onNaturalZeroCross を呼ばない", () => {
+    const onNaturalZeroCross = vi.fn();
+
+    const { result } = renderHook(() =>
+      useTimer({ totalMs: 5_000, onNaturalZeroCross }),
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(4_000);
+    });
+
+    expect(result.current.formattedTime).toBe("00:00:01");
+
+    act(() => {
+      vi.setSystemTime(Date.now() + 60_000);
+      Object.defineProperty(document, "visibilityState", {
+        configurable: true,
+        value: "visible",
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    expect(result.current.isFinished).toBe(true);
+    expect(onNaturalZeroCross).not.toHaveBeenCalled();
+  });
+
+  it("0 秒通過済みの initialState 復元時は onNaturalZeroCross を呼ばない", () => {
+    const onNaturalZeroCross = vi.fn();
+    const endTimeMs = Date.now() - 60_000;
+
+    renderHook(() =>
+      useTimer({
+        totalMs: 5_000,
+        autoStart: false,
+        initialState: {
+          remainingMs: -55_000,
+          isRunning: true,
+          endTimeMs,
+        },
+        onNaturalZeroCross,
+      }),
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
+
+    expect(onNaturalZeroCross).not.toHaveBeenCalled();
+  });
 });

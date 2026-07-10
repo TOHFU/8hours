@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   EIGHT_HOURS_MS,
   FIFTEEN_MINUTES_MS,
@@ -37,15 +37,15 @@ function Timer({
     allowOverrun: true,
     autoStart: false,
     initialState: initialMainTimer,
+    onNaturalZeroCross: playMainTimerEndSound,
   });
   const subTimer = useTimer({
     totalMs: FIFTEEN_MINUTES_MS,
     autoStart: false,
     initialState: initialSubTimer,
+    onNaturalZeroCross: playSubTimerEndSound,
   });
   const [isSubTimerActive, setIsSubTimerActive] = useState(initialSubTimerActive);
-  const previousMainRemainingMsRef = useRef(mainTimer.remainingMs);
-  const previousSubFinishedRef = useRef(subTimer.isFinished);
 
   useEffect(() => {
     onPersist({
@@ -66,25 +66,6 @@ function Timer({
     if (subTimer.isFinished) {
       setIsSubTimerActive(false);
     }
-  }, [subTimer.isFinished]);
-
-  useEffect(() => {
-    if (
-      previousMainRemainingMsRef.current > 0 &&
-      mainTimer.remainingMs <= 0
-    ) {
-      playMainTimerEndSound();
-    }
-
-    previousMainRemainingMsRef.current = mainTimer.remainingMs;
-  }, [mainTimer.remainingMs]);
-
-  useEffect(() => {
-    if (!previousSubFinishedRef.current && subTimer.isFinished) {
-      playSubTimerEndSound();
-    }
-
-    previousSubFinishedRef.current = subTimer.isFinished;
   }, [subTimer.isFinished]);
 
   const handle15Click = () => {

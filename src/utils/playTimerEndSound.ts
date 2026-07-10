@@ -1,5 +1,5 @@
 import Snd from "snd-lib";
-import { playAlertSound } from "../lib/snd";
+import { playAlertSound } from "../lib/sndAlert";
 
 function playSoundRepeatedly(soundKey: string, remainingCount: number): void {
   playAlertSound(soundKey, {
