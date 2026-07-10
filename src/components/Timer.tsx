@@ -1,40 +1,153 @@
+import { useEffect, useState } from "react";
+import {
+  EIGHT_HOURS_MS,
+  FIFTEEN_MINUTES_MS,
+  useTimer,
+} from "../hooks/useTimer";
+import type { PersistedAppState, PersistedTimerState } from "../types/appState";
+import {
+  playMainTimerEndSound,
+  playSubTimerEndSound,
+} from "../utils/playTimerEndSound";
+import { playToggleOffSound, playToggleOnSound, playToggleSound } from "../utils/playToggleSound";
+import Timer15Button from "./Timer15Button";
 import TimerArc from "./TimerArc";
+import TimerPauseButton from "./TimerPauseButton";
+import TimerResetButton from "./TimerResetButton";
+import TimerRound from "./TimerRound";
+import "./Timer.scss";
 
-function Timer() {
-  const progress = 0.6;
-  const radius = 60;
+type TimerProps = {
+  initialMainTimer: PersistedTimerState;
+  initialSubTimer: PersistedTimerState;
+  initialSubTimerActive: boolean;
+  onPersist: (
+    state: Pick<PersistedAppState, "mainTimer" | "subTimer" | "isSubTimerActive">,
+  ) => void;
+};
+
+function Timer({
+  initialMainTimer,
+  initialSubTimer,
+  initialSubTimerActive,
+  onPersist,
+}: TimerProps) {
+  const mainTimer = useTimer({
+    totalMs: EIGHT_HOURS_MS,
+    allowOverrun: true,
+    autoStart: false,
+    initialState: initialMainTimer,
+    onNaturalZeroCross: playMainTimerEndSound,
+  });
+  const subTimer = useTimer({
+    totalMs: FIFTEEN_MINUTES_MS,
+    autoStart: false,
+    initialState: initialSubTimer,
+    onNaturalZeroCross: playSubTimerEndSound,
+  });
+  const [isSubTimerActive, setIsSubTimerActive] = useState(initialSubTimerActive);
+
+  useEffect(() => {
+    onPersist({
+      mainTimer: mainTimer.getPersistedState(),
+      subTimer: subTimer.getPersistedState(),
+      isSubTimerActive,
+    });
+  }, [
+    isSubTimerActive,
+    mainTimer.isRunning,
+    mainTimer.remainingMs,
+    onPersist,
+    subTimer.isRunning,
+    subTimer.remainingMs,
+  ]);
+
+  useEffect(() => {
+    if (subTimer.isFinished) {
+      setIsSubTimerActive(false);
+    }
+  }, [subTimer.isFinished]);
+
+  const handle15Click = () => {
+    if (isSubTimerActive) {
+      playToggleOffSound();
+      setIsSubTimerActive(false);
+      subTimer.clear();
+      return;
+    }
+
+    playToggleOnSound();
+    setIsSubTimerActive(true);
+    subTimer.reset();
+
+    if (!mainTimer.isRunning) {
+      subTimer.togglePause();
+    }
+  };
+
+  const handleTogglePause = () => {
+    const willPause = mainTimer.isRunning;
+
+    if (willPause) {
+      playToggleOffSound();
+    } else {
+      playToggleOnSound();
+    }
+
+    mainTimer.togglePause();
+
+    if (!isSubTimerActive) {
+      return;
+    }
+
+    if (willPause && subTimer.isRunning) {
+      subTimer.togglePause();
+      return;
+    }
+
+    if (!willPause && subTimer.isPaused) {
+      subTimer.togglePause();
+    }
+  };
+
+  const handleReset = () => {
+    playToggleSound();
+
+    mainTimer.reset();
+    setIsSubTimerActive(false);
+    subTimer.clear();
+  };
 
   return (
     <div className="timer" data-tauri-drag-region>
-      <div className="timer-round">
-        <div className="timer-round-dial-hours">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <span key={index} className="dial-hour"></span>
-          ))}
-        </div>
-        <div className="timer-round-dial-quarters">
-          {Array.from({ length: 32 }).map((_, index) => (
-            <span key={index} className="dial-quarter"></span>
-          ))}
-        </div>
+      <TimerRound
+        mainTime={mainTimer.formattedTime}
+        subTime={subTimer.formattedTime}
+        showSubTimer={isSubTimerActive}
+      >
         <TimerArc
-          progress={progress}
-          radius={radius}
+          progress={mainTimer.progress}
+          radius={60}
           strokeWidth={40}
           stroke="#E1FF00"
           viewBoxSize={164}
         />
-        <div className="timer-round-dial-number">
-          {Array.from({ length: 9 }).map((_, index) => (
-            <span key={index} className="dial-number"></span>
-          ))}
-        </div>
-        <div className="timer-round-center" data-tauri-drag-region>
-          <p className="timer-round-center-time">00:00:00</p>
-        </div>
-      </div>
-      <button className="timer-reset-btn">RESET</button>
-      <button className="timer-pause-btn">PAUSE</button>
+        {isSubTimerActive && (
+          <TimerArc
+            progress={subTimer.progress}
+            radius={55}
+            strokeWidth={12}
+            stroke="#ff0084"
+            viewBoxSize={140}
+          />
+        )}
+      </TimerRound>
+      <Timer15Button isActive={isSubTimerActive} onClick={handle15Click} />
+      <TimerResetButton onClick={handleReset} />
+      <TimerPauseButton
+        label={mainTimer.isRunning ? "PAUSE" : "PLAY"}
+        onClick={handleTogglePause}
+      />
     </div>
   );
 }

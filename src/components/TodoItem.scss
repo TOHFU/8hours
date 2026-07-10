@@ -1,0 +1,110 @@
+.todo-item {
+  width: 203px;
+  height: 17px;
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  position: relative;
+  padding: 0 6px 0 10px;
+  background: #DDDDDD;
+  border-radius: 16px 32px 0px 0px;
+  box-sizing: border-box;
+  transition: height 0.2s ease-in-out, margin-bottom 0.2s ease-in-out;
+  will-change: height, margin-bottom;
+
+  &::after {
+    content: "";
+    width: 203px;
+    height: 16px;
+    top: 17px;
+    background: #111111;
+    border-radius: 0px 0px 32px 16px;
+    display: block;
+    position: absolute;
+    transition: height 0.2s ease-in-out, transform 0.2s ease-in-out;
+    transform: translateY();
+    left: 0;
+    z-index: -1;
+    will-change: height, transform;
+  }
+
+  // animation: collapse list gap while folding (not list spacing)
+  &.is-folded {
+    height: 0;
+    margin-bottom: -16px;
+
+    &::after {
+      transform: translateY(-17px);
+      height: 0;
+    }
+
+    .todo-item-menu,
+    .todo-item-checkbox,
+    .todo-item-input {
+      opacity: 0;
+      transition: opacity 0s ease-in-out;
+    }
+  }
+
+  .todo-item-menu,
+  .todo-item-checkbox,
+  .todo-item-input {
+    opacity: 1;
+    transition: opacity 0s ease-in-out 0.2s;
+  }
+
+  // layout: child placement
+  .todo-item-menu {
+    position: absolute;
+    bottom: -15px;
+    left: 10px;
+  }
+
+  .todo-item-checkbox {
+    top: 11px;
+  }
+
+  .todo-item-input {
+    top: -2px;
+  }
+
+  &.is-black {
+    background: #DDDDDD;
+
+    &::after {
+      background: #111111;
+    }
+  }
+
+  &.is-red {
+    background: #FF1E00;
+
+    &::after {
+      background: #A91502;
+    }
+  }
+
+  &.is-blue {
+    background: #006FFF;
+
+    &::after {
+      background: #004FB6;
+    }
+  }
+
+  &.is-yellow {
+    background: #E1FF00;
+
+    &::after {
+      background: #8B9D01;
+    }
+  }
+
+  &.is-pink {
+    background: #FF0084;
+
+    &::after {
+      background: #9D0051;
+    }
+  }
+}

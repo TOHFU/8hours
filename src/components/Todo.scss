@@ -1,0 +1,12 @@
+.todo {
+  width: 203px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+// layout: reserve cap space below last item (replaces former todo-item margin-bottom)
+.todo-add-buton {
+  margin-top: 16px;
+}

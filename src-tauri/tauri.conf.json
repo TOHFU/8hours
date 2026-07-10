@@ -20,7 +20,6 @@
         "minWidth": 219,
         "minHeight": 366,
         "maxWidth": 219,
-        "maxHeight": 366,
         "resizable": false,
         "fullscreen": false,
         "decorations": false,

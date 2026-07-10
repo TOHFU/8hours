@@ -1,0 +1,69 @@
+.todo-item-menu {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  overflow: hidden;
+
+  &.is-open {
+    .todo-item-menu-list {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+}
+
+.todo-item-menu-list {
+  list-style: none;
+  padding: 0 0 0px 4px;
+  margin: 0;
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.todo-item-menu-list-item {
+  cursor: pointer;
+}
+
+.todo-item-menu-list-item.delete {
+  height: 13px;
+  margin-left: 2px;
+  padding-left: 4px;
+  padding-bottom: 2px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #AAAAAA;
+  border-left: 2px solid #AAAAAA;
+}
+
+.todo-item-menu-list-item.circle {
+  width: 8px;
+  height: 8px;
+  top: 0px;
+  border-radius: 50%;
+  background-color: #AAAAAA;
+  position: relative;
+
+  &.circle-black {
+    background-color: #DDDDDD;
+  }
+
+  &.circle-red {
+    background-color: #FF1E00;
+  }
+
+  &.circle-blue {
+    background-color: #006FFF;
+  }
+
+  &.circle-yellow {
+    background-color: #E1FF00;
+  }
+
+  &.circle-pink {
+    background-color: #FF0084;
+    top: 1px;
+  }
+}
