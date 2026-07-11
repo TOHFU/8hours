@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
-export const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
+export const THIRTY_MINUTES_MS = 30 * 60 * 1000;
 
 /** 1 tick 分のズレまでを「リアルタイムで 0 秒通過」とみなす */
 const NATURAL_ZERO_CROSS_MAX_MS = 1_500;
@@ -16,7 +16,7 @@ export function formatTime(ms: number): string {
   return (
     sign +
     [hours, minutes, seconds]
-    .map((value) => String(value).padStart(2, "0"))
+      .map((value) => String(value).padStart(2, "0"))
       .join(":")
   );
 }
@@ -70,12 +70,19 @@ function resolveInitialTimerState(
   };
 }
 
+export type TimerMilestone = {
+  /** この残り時間(ミリ秒)を下回った瞬間に onCross を呼ぶ */
+  atRemainingMs: number;
+  onCross: () => void;
+};
+
 type UseTimerOptions = {
   totalMs?: number;
   autoStart?: boolean;
   allowOverrun?: boolean;
   initialState?: TimerInitialState;
   onNaturalZeroCross?: () => void;
+  milestones?: TimerMilestone[];
 };
 
 export function useTimer({
@@ -84,6 +91,7 @@ export function useTimer({
   allowOverrun = false,
   initialState,
   onNaturalZeroCross,
+  milestones,
 }: UseTimerOptions = {}) {
   const initialTimerState = resolveInitialTimerState(
     totalMs,
@@ -97,10 +105,15 @@ export function useTimer({
   const previousRemainingRef = useRef(initialTimerState.remainingMs);
   const lastSyncAtRef = useRef(Date.now());
   const onNaturalZeroCrossRef = useRef(onNaturalZeroCross);
+  const milestonesRef = useRef(milestones);
 
   useEffect(() => {
     onNaturalZeroCrossRef.current = onNaturalZeroCross;
   }, [onNaturalZeroCross]);
+
+  useEffect(() => {
+    milestonesRef.current = milestones;
+  }, [milestones]);
 
   const syncFromDeadline = useCallback(() => {
     const endTimeMs = endTimeMsRef.current;
@@ -122,6 +135,17 @@ export function useTimer({
       elapsedSinceLastSync <= NATURAL_ZERO_CROSS_MAX_MS
     ) {
       onNaturalZeroCrossRef.current();
+    }
+
+    if (elapsedSinceLastSync <= NATURAL_ZERO_CROSS_MAX_MS) {
+      for (const milestone of milestonesRef.current ?? []) {
+        if (
+          previousRemainingMs > milestone.atRemainingMs &&
+          nextRemainingMs <= milestone.atRemainingMs
+        ) {
+          milestone.onCross();
+        }
+      }
     }
 
     previousRemainingRef.current = nextRemainingMs;
@@ -208,7 +232,9 @@ export function useTimer({
     });
   }, [allowOverrun]);
 
-  const getPersistedState = useCallback((): TimerInitialState & { endTimeMs: number | null } => {
+  const getPersistedState = useCallback((): TimerInitialState & {
+    endTimeMs: number | null;
+  } => {
     const endTimeMs = endTimeMsRef.current;
 
     if (endTimeMs !== null) {

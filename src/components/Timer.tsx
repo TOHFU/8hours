@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
-import {
-  EIGHT_HOURS_MS,
-  FIFTEEN_MINUTES_MS,
-  useTimer,
-} from "../hooks/useTimer";
+import { EIGHT_HOURS_MS, THIRTY_MINUTES_MS, useTimer } from "../hooks/useTimer";
 import type { PersistedAppState, PersistedTimerState } from "../types/appState";
 import {
   playMainTimerEndSound,
+  playSubTimerCelebrationSound,
   playSubTimerEndSound,
 } from "../utils/playTimerEndSound";
 import { useSoundMute } from "../hooks/useSoundMute";
-import { playToggleOffSound, playToggleOnSound, playToggleSound } from "../utils/playToggleSound";
-import Timer15Button from "./Timer15Button";
+import {
+  playToggleOffSound,
+  playToggleOnSound,
+  playToggleSound,
+} from "../utils/playToggleSound";
+import Timer25Button from "./Timer25Button";
 import TimerArc from "./TimerArc";
 import TimerPauseButton from "./TimerPauseButton";
 import TimerResetButton from "./TimerResetButton";
@@ -19,12 +20,19 @@ import TimerRound from "./TimerRound";
 import TimerSoundButton from "./TimerSoundButton";
 import "./Timer.scss";
 
+/** サブタイマー: 25分(集中)+5分(休憩)の計30分 */
+const SUB_TIMER_BREAK_MS = 5 * 60 * 1000;
+const SUB_TIMER_BREAK_THRESHOLD = SUB_TIMER_BREAK_MS / THIRTY_MINUTES_MS;
+
 type TimerProps = {
   initialMainTimer: PersistedTimerState;
   initialSubTimer: PersistedTimerState;
   initialSubTimerActive: boolean;
   onPersist: (
-    state: Pick<PersistedAppState, "mainTimer" | "subTimer" | "isSubTimerActive">,
+    state: Pick<
+      PersistedAppState,
+      "mainTimer" | "subTimer" | "isSubTimerActive"
+    >,
   ) => void;
 };
 
@@ -42,12 +50,20 @@ function Timer({
     onNaturalZeroCross: playMainTimerEndSound,
   });
   const subTimer = useTimer({
-    totalMs: FIFTEEN_MINUTES_MS,
+    totalMs: THIRTY_MINUTES_MS,
     autoStart: false,
     initialState: initialSubTimer,
     onNaturalZeroCross: playSubTimerEndSound,
+    milestones: [
+      {
+        atRemainingMs: SUB_TIMER_BREAK_MS,
+        onCross: playSubTimerCelebrationSound,
+      },
+    ],
   });
-  const [isSubTimerActive, setIsSubTimerActive] = useState(initialSubTimerActive);
+  const [isSubTimerActive, setIsSubTimerActive] = useState(
+    initialSubTimerActive,
+  );
   const { isMuted, toggle: toggleSoundMute } = useSoundMute();
 
   useEffect(() => {
@@ -71,7 +87,7 @@ function Timer({
     }
   }, [subTimer.isFinished]);
 
-  const handle15Click = () => {
+  const handle25Click = () => {
     if (isSubTimerActive) {
       playToggleOffSound();
       setIsSubTimerActive(false);
@@ -127,12 +143,13 @@ function Timer({
         mainTime={mainTimer.formattedTime}
         subTime={subTimer.formattedTime}
         showSubTimer={isSubTimerActive}
+        isSubTimerInBreak={subTimer.progress <= SUB_TIMER_BREAK_THRESHOLD}
       >
         <TimerArc
           progress={mainTimer.progress}
           radius={60}
           strokeWidth={40}
-          stroke="#E1FF00"
+          strokeFrom="#E1FF00"
           viewBoxSize={164}
         />
         {isSubTimerActive && (
@@ -140,12 +157,14 @@ function Timer({
             progress={subTimer.progress}
             radius={55}
             strokeWidth={12}
-            stroke="#ff0084"
+            strokeFrom="#ff0084"
+            strokeTo="#004FB6"
+            strokeToThreshold={SUB_TIMER_BREAK_THRESHOLD}
             viewBoxSize={140}
           />
         )}
       </TimerRound>
-      <Timer15Button isActive={isSubTimerActive} onClick={handle15Click} />
+      <Timer25Button isActive={isSubTimerActive} onClick={handle25Click} />
       <TimerResetButton onClick={handleReset} />
       <TimerPauseButton
         label={mainTimer.isRunning ? "PAUSE" : "PLAY"}

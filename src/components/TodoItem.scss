@@ -6,10 +6,12 @@
   align-items: flex-end;
   position: relative;
   padding: 0 6px 0 10px;
-  background: #DDDDDD;
+  background: #dddddd;
   border-radius: 16px 32px 0px 0px;
   box-sizing: border-box;
-  transition: height 0.2s ease-in-out, margin-bottom 0.2s ease-in-out;
+  transition:
+    height 0.2s ease-in-out,
+    margin-bottom 0.2s ease-in-out;
   will-change: height, margin-bottom;
 
   &::after {
@@ -21,7 +23,9 @@
     border-radius: 0px 0px 32px 16px;
     display: block;
     position: absolute;
-    transition: height 0.2s ease-in-out, transform 0.2s ease-in-out;
+    transition:
+      height 0.2s ease-in-out,
+      transform 0.2s ease-in-out;
     transform: translateY();
     left: 0;
     z-index: -1;
@@ -69,7 +73,7 @@
   }
 
   &.is-black {
-    background: #DDDDDD;
+    background: #dddddd;
 
     &::after {
       background: #111111;
@@ -77,34 +81,46 @@
   }
 
   &.is-red {
-    background: #FF1E00;
+    background: #ff1e00;
 
     &::after {
-      background: #A91502;
+      background: #a91502;
     }
   }
 
   &.is-blue {
-    background: #006FFF;
+    background: #006fff;
 
     &::after {
-      background: #004FB6;
+      background: #004fb6;
     }
   }
 
   &.is-yellow {
-    background: #E1FF00;
+    background: #e1ff00;
 
     &::after {
-      background: #8B9D01;
+      background: #8b9d01;
     }
   }
 
   &.is-pink {
-    background: #FF0084;
+    background: #ff0084;
 
     &::after {
-      background: #9D0051;
+      background: #9d0051;
+    }
+  }
+
+  // interaction: floating feedback while dragging to reorder
+  &.is-dragging {
+    z-index: 10;
+    cursor: grabbing;
+    transition: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+
+    &::after {
+      transition: none;
     }
   }
 }
