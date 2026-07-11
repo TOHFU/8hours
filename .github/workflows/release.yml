@@ -51,8 +51,8 @@ jobs:
 
             macOS (Apple Silicon) 向け DMG です（アドホック署名、公証なし）。
 
-            **注意:** 有料 Apple Developer Program 未加入のため、初回起動時に Gatekeeper の警告が出る場合があります。
-            右クリック →「開く」から起動してください。
+            注意: 有料 Apple Developer Program 未加入のため、初回起動時に Gatekeeper の警告が出る場合があります。
+            「システム設定」→「プライバシーとセキュリティ」→「"8hours" は開発元を確認できないため…」の 「このまま開く」を押してください。
           releaseDraft: false
           prerelease: false
           args: --target aarch64-apple-darwin --bundles dmg
