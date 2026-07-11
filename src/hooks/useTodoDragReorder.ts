@@ -61,6 +61,9 @@ export function useTodoDragReorder({
   const itemElementsRef = useRef(new Map<string, HTMLElement>());
   const prevTopsRef = useRef(new Map<string, number>());
   const dragStateRef = useRef<DragState>(createInitialDragState());
+  // ドラッグによる入れ替えが発生した直後の render でだけ FLIP アニメーションを行うためのフラグ
+  // (追加・削除など、入れ替え以外で itemIds が変化したときは何もしない)
+  const pendingReorderFlipRef = useRef(false);
 
   const registerItemRef = useCallback(
     (id: string, element: HTMLElement | null) => {
@@ -124,6 +127,7 @@ export function useTodoDragReorder({
 
     if (targetIndex !== state.lastTargetIndex) {
       state.lastTargetIndex = targetIndex;
+      pendingReorderFlipRef.current = true;
       onReorderRef.current(state.pressedId, targetIndex);
     }
 
@@ -197,11 +201,15 @@ export function useTodoDragReorder({
     };
   }, [detachWindowListeners]);
 
-  // 並び順が変わったアイテムを、旧位置からスライドして新しい位置に収まるようアニメーションさせる(FLIP)
+  // ドラッグで入れ替わったアイテムを、旧位置からスライドして新しい位置に収まるようアニメーションさせる(FLIP)。
+  // 追加・削除など入れ替え以外で itemIds が変化したときは、それぞれ専用のアニメーションに任せ、
+  // ここでは位置の基準(prevTops)を更新するだけにして余計な translateY を適用しない。
   useLayoutEffect(() => {
     const elements = itemElementsRef.current;
     const prevTops = prevTopsRef.current;
     const nextTops = new Map<string, number>();
+    const shouldAnimate = pendingReorderFlipRef.current;
+    pendingReorderFlipRef.current = false;
 
     for (const id of itemIds) {
       const element = elements.get(id);
@@ -212,7 +220,7 @@ export function useTodoDragReorder({
       const nextTop = element.getBoundingClientRect().top;
       nextTops.set(id, nextTop);
 
-      if (id === draggingId) {
+      if (!shouldAnimate || id === draggingId) {
         continue;
       }
 
@@ -232,6 +240,12 @@ export function useTodoDragReorder({
       requestAnimationFrame(() => {
         element.style.transition = REORDER_TRANSITION;
         element.style.transform = "";
+
+        const clearInlineTransition = () => {
+          element.style.transition = "";
+          element.removeEventListener("transitionend", clearInlineTransition);
+        };
+        element.addEventListener("transitionend", clearInlineTransition);
       });
     }
 
