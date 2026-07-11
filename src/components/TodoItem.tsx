@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import type { TodoColor, TodoItemData } from "../types/todo";
 import { playToggleOffSound } from "../utils/playToggleSound";
 import TodoItemCheckbox from "./TodoItemCheckbox";
@@ -14,6 +15,8 @@ type TodoItemProps = {
   isMenuOpen: boolean;
   startFolded?: boolean;
   skipDeleteAnimation?: boolean;
+  isDragging?: boolean;
+  dragOffsetY?: number;
   onTextChange: (text: string) => void;
   onStartEdit: () => void;
   onStopEdit: () => void;
@@ -21,6 +24,8 @@ type TodoItemProps = {
   onColorChange: (color: TodoColor) => void;
   onDelete: () => void;
   onToggleChecked: (checked: boolean) => void;
+  onDragMouseDown?: (event: ReactMouseEvent) => void;
+  itemRef?: (element: HTMLLIElement | null) => void;
 };
 
 function TodoItem({
@@ -29,6 +34,8 @@ function TodoItem({
   isMenuOpen,
   startFolded = false,
   skipDeleteAnimation = false,
+  isDragging = false,
+  dragOffsetY = 0,
   onTextChange,
   onStartEdit,
   onStopEdit,
@@ -36,6 +43,8 @@ function TodoItem({
   onColorChange,
   onDelete,
   onToggleChecked,
+  onDragMouseDown,
+  itemRef,
 }: TodoItemProps) {
   const [isFolded, setIsFolded] = useState(startFolded);
   const deleteTimeoutRef = useRef<number | null>(null);
@@ -85,7 +94,12 @@ function TodoItem({
 
   return (
     <li
-      className={`todo-item is-${item.color}${item.checked ? " is-checked" : ""}${isFolded ? " is-folded" : ""}`}
+      ref={itemRef}
+      className={`todo-item is-${item.color}${item.checked ? " is-checked" : ""}${isFolded ? " is-folded" : ""}${isDragging ? " is-dragging" : ""}`}
+      style={
+        isDragging ? { transform: `translateY(${dragOffsetY}px)` } : undefined
+      }
+      onMouseDown={onDragMouseDown}
     >
       <TodoItemInput
         className="todo-item-input"

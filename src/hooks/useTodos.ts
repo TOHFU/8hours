@@ -51,6 +51,26 @@ export function useTodos(
     });
   }, []);
 
+  const reorderItem = useCallback((id: string, toIndex: number) => {
+    setItems((currentItems) => {
+      const fromIndex = currentItems.findIndex((item) => item.id === id);
+      const clampedToIndex = Math.max(
+        0,
+        Math.min(toIndex, currentItems.length - 1),
+      );
+
+      if (fromIndex === -1 || fromIndex === clampedToIndex) {
+        return currentItems;
+      }
+
+      const nextItems = [...currentItems];
+      const [movedItem] = nextItems.splice(fromIndex, 1);
+      nextItems.splice(clampedToIndex, 0, movedItem);
+
+      return nextItems;
+    });
+  }, []);
+
   return {
     items,
     addItem,
@@ -58,5 +78,6 @@ export function useTodos(
     toggleChecked,
     changeColor,
     deleteItem,
+    reorderItem,
   };
 }
