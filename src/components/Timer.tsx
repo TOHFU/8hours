@@ -9,12 +9,14 @@ import {
   playMainTimerEndSound,
   playSubTimerEndSound,
 } from "../utils/playTimerEndSound";
+import { useSoundMute } from "../hooks/useSoundMute";
 import { playToggleOffSound, playToggleOnSound, playToggleSound } from "../utils/playToggleSound";
 import Timer15Button from "./Timer15Button";
 import TimerArc from "./TimerArc";
 import TimerPauseButton from "./TimerPauseButton";
 import TimerResetButton from "./TimerResetButton";
 import TimerRound from "./TimerRound";
+import TimerSoundButton from "./TimerSoundButton";
 import "./Timer.scss";
 
 type TimerProps = {
@@ -46,6 +48,7 @@ function Timer({
     onNaturalZeroCross: playSubTimerEndSound,
   });
   const [isSubTimerActive, setIsSubTimerActive] = useState(initialSubTimerActive);
+  const { isMuted, toggle: toggleSoundMute } = useSoundMute();
 
   useEffect(() => {
     onPersist({
@@ -148,6 +151,7 @@ function Timer({
         label={mainTimer.isRunning ? "PAUSE" : "PLAY"}
         onClick={handleTogglePause}
       />
+      <TimerSoundButton isMuted={isMuted} onClick={toggleSoundMute} />
     </div>
   );
 }
