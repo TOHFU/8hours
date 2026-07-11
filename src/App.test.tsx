@@ -40,6 +40,12 @@ vi.mock("./utils/playTimerEndSound", () => ({
   playSubTimerEndSound: vi.fn(),
 }));
 
+vi.mock("./lib/soundMute", () => ({
+  isSoundMuted: vi.fn(() => false),
+  setSoundMuted: vi.fn(),
+  toggleSoundMuted: vi.fn(() => false),
+}));
+
 vi.mock("@tauri-apps/plugin-notification", () => ({
   isPermissionGranted: vi.fn().mockResolvedValue(true),
   requestPermission: vi.fn().mockResolvedValue("granted"),
