@@ -1,10 +1,11 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import App from "./App";
-import { EIGHT_HOURS_MS, FIFTEEN_MINUTES_MS } from "./hooks/useTimer";
+import { EIGHT_HOURS_MS, THIRTY_MINUTES_MS } from "./hooks/useTimer";
 import { saveAppState } from "./lib/appState";
 import { createDefaultAppState } from "./types/appState";
 import {
   playMainTimerEndSound,
+  playSubTimerCelebrationSound,
   playSubTimerEndSound,
 } from "./utils/playTimerEndSound";
 
@@ -38,6 +39,7 @@ vi.mock("./utils/playTransitionSound", () => ({
 vi.mock("./utils/playTimerEndSound", () => ({
   playMainTimerEndSound: vi.fn(),
   playSubTimerEndSound: vi.fn(),
+  playSubTimerCelebrationSound: vi.fn(),
 }));
 
 vi.mock("./lib/soundMute", () => ({
@@ -97,28 +99,28 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "PAUSE" })).toBeInTheDocument();
   });
 
-  it("15分タイマーを押し込み式ボタンで開始・停止できる", () => {
+  it("25分タイマーを押し込み式ボタンで開始・停止できる", () => {
     render(<App />);
-    const subTimerButton = screen.getByRole("button", { name: "15" });
+    const subTimerButton = screen.getByRole("button", { name: "25" });
 
-    expect(screen.queryByText("00:15:00")).not.toBeInTheDocument();
+    expect(screen.queryByText("00:30:00")).not.toBeInTheDocument();
     expect(subTimerButton).toHaveAttribute("aria-pressed", "false");
 
     fireEvent.click(subTimerButton);
 
     expect(subTimerButton).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByText("00:15:00")).toBeInTheDocument();
+    expect(screen.getByText("00:30:00")).toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(1000);
     });
 
-    expect(screen.getByText("00:14:59")).toBeInTheDocument();
+    expect(screen.getByText("00:29:59")).toBeInTheDocument();
 
     fireEvent.click(subTimerButton);
 
     expect(subTimerButton).toHaveAttribute("aria-pressed", "false");
-    expect(screen.queryByText("00:14:59")).not.toBeInTheDocument();
+    expect(screen.queryByText("00:29:59")).not.toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(3000);
@@ -127,34 +129,34 @@ describe("App", () => {
     fireEvent.click(subTimerButton);
 
     expect(subTimerButton).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByText("00:15:00")).toBeInTheDocument();
+    expect(screen.getByText("00:30:00")).toBeInTheDocument();
   });
 
-  it("15分タイマーが終了するとボタンが通常状態に戻る", () => {
+  it("25分タイマーが終了するとボタンが通常状態に戻る", () => {
     render(<App />);
-    const subTimerButton = screen.getByRole("button", { name: "15" });
+    const subTimerButton = screen.getByRole("button", { name: "25" });
 
     fireEvent.click(subTimerButton);
 
     act(() => {
-      vi.advanceTimersByTime(FIFTEEN_MINUTES_MS);
+      vi.advanceTimersByTime(THIRTY_MINUTES_MS);
     });
 
     expect(subTimerButton).toHaveAttribute("aria-pressed", "false");
     expect(screen.queryByText("00:00:00")).not.toBeInTheDocument();
   });
 
-  it("PAUSEで8時間と15分タイマーを同時に停止・再開できる", () => {
+  it("PAUSEで8時間と25分タイマーを同時に停止・再開できる", () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole("button", { name: "15" }));
+    fireEvent.click(screen.getByRole("button", { name: "25" }));
 
     act(() => {
       vi.advanceTimersByTime(1000);
     });
 
     expect(screen.getByText("07:59:59")).toBeInTheDocument();
-    expect(screen.getByText("00:14:59")).toBeInTheDocument();
+    expect(screen.getByText("00:29:59")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "PAUSE" }));
 
@@ -163,7 +165,7 @@ describe("App", () => {
     });
 
     expect(screen.getByText("07:59:59")).toBeInTheDocument();
-    expect(screen.getByText("00:14:59")).toBeInTheDocument();
+    expect(screen.getByText("00:29:59")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "PLAY" }));
 
@@ -172,12 +174,12 @@ describe("App", () => {
     });
 
     expect(screen.getByText("07:59:58")).toBeInTheDocument();
-    expect(screen.getByText("00:14:58")).toBeInTheDocument();
+    expect(screen.getByText("00:29:58")).toBeInTheDocument();
   });
 
-  it("RESETで8時間タイマーをリセットし15分タイマーをOFFにする", () => {
+  it("RESETで8時間タイマーをリセットし25分タイマーをOFFにする", () => {
     render(<App />);
-    const subTimerButton = screen.getByRole("button", { name: "15" });
+    const subTimerButton = screen.getByRole("button", { name: "25" });
 
     fireEvent.click(subTimerButton);
 
@@ -185,13 +187,13 @@ describe("App", () => {
       vi.advanceTimersByTime(1000);
     });
 
-    expect(screen.getByText("00:14:59")).toBeInTheDocument();
+    expect(screen.getByText("00:29:59")).toBeInTheDocument();
     expect(subTimerButton).toHaveAttribute("aria-pressed", "true");
 
     fireEvent.click(screen.getByRole("button", { name: "RESET" }));
 
     expect(screen.getByText("08:00:00")).toBeInTheDocument();
-    expect(screen.queryByText("00:14:59")).not.toBeInTheDocument();
+    expect(screen.queryByText("00:29:59")).not.toBeInTheDocument();
     expect(subTimerButton).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByRole("button", { name: "PAUSE" })).toBeInTheDocument();
   });
@@ -215,16 +217,37 @@ describe("App", () => {
     expect(playMainTimerEndSound).toHaveBeenCalledTimes(1);
   });
 
-  it("15分タイマーは 0 到達時に終了音を1回だけ鳴らす", () => {
+  it("25分タイマーは 0 到達時に終了音を1回だけ鳴らす", () => {
     render(<App />);
-    const subTimerButton = screen.getByRole("button", { name: "15" });
+    const subTimerButton = screen.getByRole("button", { name: "25" });
 
     fireEvent.click(subTimerButton);
 
     act(() => {
-      vi.advanceTimersByTime(FIFTEEN_MINUTES_MS);
+      vi.advanceTimersByTime(THIRTY_MINUTES_MS);
     });
 
+    expect(playSubTimerEndSound).toHaveBeenCalledTimes(1);
+  });
+
+  it("25分タイマーは25分経過(残り5分)時にお祝いサウンドを1回だけ鳴らす", () => {
+    render(<App />);
+    const subTimerButton = screen.getByRole("button", { name: "25" });
+
+    fireEvent.click(subTimerButton);
+
+    act(() => {
+      vi.advanceTimersByTime(25 * 60 * 1000);
+    });
+
+    expect(playSubTimerCelebrationSound).toHaveBeenCalledTimes(1);
+    expect(playSubTimerEndSound).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(5 * 60 * 1000);
+    });
+
+    expect(playSubTimerCelebrationSound).toHaveBeenCalledTimes(1);
     expect(playSubTimerEndSound).toHaveBeenCalledTimes(1);
   });
 

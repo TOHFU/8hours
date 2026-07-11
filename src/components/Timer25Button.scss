@@ -1,9 +1,9 @@
-.timer-15-btn {
+.timer-25-btn {
   width: 20px;
   height: 20px;
   display: block;
   appearance: none;
-  background: #AAAAAA;
+  background: #aaaaaa;
   border: none;
   border-radius: 50%;
   padding: 3px 6px 5px 2px;
@@ -22,7 +22,7 @@
     height: 22px;
     top: 0px;
     left: -3px;
-    background: #EEEEEE;
+    background: #eeeeee;
     border-radius: 50%;
     position: absolute;
     z-index: -1;
@@ -30,12 +30,13 @@
 
   &.is-active::before,
   &:active::before {
+    top: -0.5px;
     left: -4px;
   }
 
   &.is-active {
     background: #9d0051;
-    padding: 3px 8px 5px 2px;
+    padding: 3px 8px 5px 1px;
   }
 
   &.is-active::before {

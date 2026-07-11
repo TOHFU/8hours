@@ -1,4 +1,4 @@
-import { EIGHT_HOURS_MS, FIFTEEN_MINUTES_MS } from "../hooks/useTimer";
+import { EIGHT_HOURS_MS, THIRTY_MINUTES_MS } from "../hooks/useTimer";
 import { createEmptyTodoItem, type TodoItemData } from "./todo";
 
 export const APP_STATE_STORAGE_KEY = "8hours-app-state";
@@ -28,7 +28,7 @@ export function createDefaultMainTimerState(): PersistedTimerState {
 
 export function createDefaultSubTimerState(): PersistedTimerState {
   return {
-    remainingMs: FIFTEEN_MINUTES_MS,
+    remainingMs: THIRTY_MINUTES_MS,
     isRunning: false,
     endTimeMs: null,
   };

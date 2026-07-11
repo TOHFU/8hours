@@ -105,13 +105,23 @@
   }
 }
 
-.dial-number-15 {
+.dial-number-25 {
+  font-size: 12px;
+  font-weight: 500;
+  position: relative;
+  top: 54px;
+  left: calc(50% + 45px);
+  color: #ff0084;
+  letter-spacing: 0.05em;
+}
+
+.dial-number-30 {
   font-size: 12px;
   font-weight: 500;
   position: relative;
   top: 16px;
-  left: calc(50% - 4.5px);
-  color: #ff0084;
+  left: calc(50% - 5.5px);
+  color: #004fb6;
   letter-spacing: 0.05em;
 }
 
@@ -151,7 +161,11 @@
   z-index: 1;
   user-select: none;
 
-  &.time-15 {
+  &.time-25 {
     color: #ff0084;
+  }
+
+  &.time-25-break {
+    color: #006fff;
   }
 }

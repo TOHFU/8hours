@@ -18,3 +18,7 @@ export function playMainTimerEndSound(): void {
 export function playSubTimerEndSound(): void {
   playAlertSound(Snd.SOUNDS.RINGTONE_LOOP);
 }
+
+export function playSubTimerCelebrationSound(): void {
+  playAlertSound(Snd.SOUNDS.CELEBRATION);
+}
