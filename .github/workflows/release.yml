@@ -46,9 +46,10 @@ jobs:
           tagName: v__VERSION__
           releaseName: 8hours v__VERSION__
           releaseBody: |
-            macOS (Apple Silicon) 向け DMG です（アドホック署名、公証なし）。
+            8時間＋ポモドーロタイマー＋TODOアプリ、「8hours」のアプリインストーラです。
+            LP：https://8hours-lp-one.vercel.app/
 
-            `src-tauri/tauri.conf.json` の version と一致する `v*` タグを push すると Release が作成されます。
+            macOS (Apple Silicon) 向け DMG です（アドホック署名、公証なし）。
 
             **注意:** 有料 Apple Developer Program 未加入のため、初回起動時に Gatekeeper の警告が出る場合があります。
             右クリック →「開く」から起動してください。
