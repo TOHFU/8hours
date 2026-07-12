@@ -2,19 +2,20 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
-import type { MouseEvent as ReactMouseEvent } from "react";
+import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 
-/** マウスダウンからこの時間(ms)以上経過するとドラッグを開始する */
-const LONG_PRESS_MS = 1000;
-/** 長押し確定前にこの距離(px)以上動いたら長押しをキャンセルする */
-const MOVE_CANCEL_THRESHOLD_PX = 6;
-/** アイテムの高さが計測できない場合に使うフォールバック値(高さ + gap) */
-const FALLBACK_ROW_HEIGHT_PX = 33 + 16;
-/** 入れ替わったアイテムがスライドして収まるアニメーションの時間 */
-const REORDER_TRANSITION = "transform 0.18s ease";
+/** マウスダウンから既定でこの時間(ms)以上経過するとドラッグを開始する */
+const DEFAULT_LONG_PRESS_MS = 300;
+/** 長押し確定前に既定でこの距離(px)以上動いたら長押しをキャンセルする */
+const DEFAULT_MOVE_CANCEL_THRESHOLD_PX = 6;
+/** 行の高さが計測できない場合に使う既定のフォールバック値(px) */
+const DEFAULT_FALLBACK_ROW_HEIGHT_PX = 49;
+/** 入れ替わったアイテムがスライドして収まるアニメーションの既定の時間(ms) */
+const DEFAULT_REORDER_TRANSITION_MS = 180;
 
 type DragPhase = "idle" | "pending" | "dragging";
 
@@ -28,41 +29,71 @@ type DragState = {
   timeoutId: number | null;
 };
 
-function createInitialDragState(): DragState {
+function createInitialDragState(fallbackRowHeightPx: number): DragState {
   return {
     phase: "idle",
     pressedId: null,
     startClientY: 0,
     startIndex: 0,
-    rowHeight: FALLBACK_ROW_HEIGHT_PX,
+    rowHeight: fallbackRowHeightPx,
     lastTargetIndex: 0,
     timeoutId: null,
   };
 }
 
-type UseTodoDragReorderOptions = {
-  itemIds: string[];
-  onReorder: (id: string, toIndex: number) => void;
+export type DragReorderItemProps = {
+  ref: (element: HTMLElement | null) => void;
+  onMouseDown: (event: ReactMouseEvent) => void;
+  isDragging: boolean;
+  style: CSSProperties | undefined;
 };
 
-export function useTodoDragReorder({
-  itemIds,
+export type UseDragReorderOptions = {
+  /** 並び替え対象の id を、現在の表示順で並べた配列 */
+  ids: string[];
+  /** id を toIndex の位置に移動させたいときに呼ばれる */
+  onReorder: (id: string, toIndex: number) => void;
+  /** マウスダウンからドラッグ開始までの長押し時間(ms)。既定 300ms */
+  longPressMs?: number;
+  /** 長押し確定前にドラッグをキャンセルする移動距離(px)。既定 6px */
+  moveCancelThresholdPx?: number;
+  /** 入れ替わったアイテムがスライドして収まるアニメーション時間(ms)。既定 180ms */
+  reorderTransitionMs?: number;
+};
+
+/**
+ * 縦一列に並んだリストを、長押し(既定300ms)からのマウスドラッグで並び替えられるようにする汎用フック。
+ *
+ * - 各アイテムの DOM 要素は `registerItemRef` (または `getItemProps(id).ref`) で登録する
+ * - 各アイテムの `onMouseDown` に `handleItemMouseDown(id, event)` (または `getItemProps(id).onMouseDown`) を渡す
+ * - ドラッグ中のアイテムはマウスの Y 移動に追従し、他のアイテムと入れ替わった位置は
+ *   スライドアニメーション(FLIP)で滑らかに収まる
+ */
+export function useDragReorder({
+  ids,
   onReorder,
-}: UseTodoDragReorderOptions) {
+  longPressMs = DEFAULT_LONG_PRESS_MS,
+  moveCancelThresholdPx = DEFAULT_MOVE_CANCEL_THRESHOLD_PX,
+  reorderTransitionMs = DEFAULT_REORDER_TRANSITION_MS,
+}: UseDragReorderOptions) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOffsetY, setDragOffsetY] = useState(0);
 
-  const itemIdsRef = useRef(itemIds);
-  itemIdsRef.current = itemIds;
+  const idsRef = useRef(ids);
+  idsRef.current = ids;
 
   const onReorderRef = useRef(onReorder);
   onReorderRef.current = onReorder;
 
+  const reorderTransition = `transform ${reorderTransitionMs}ms ease`;
+
   const itemElementsRef = useRef(new Map<string, HTMLElement>());
   const prevTopsRef = useRef(new Map<string, number>());
-  const dragStateRef = useRef<DragState>(createInitialDragState());
+  const dragStateRef = useRef<DragState>(
+    createInitialDragState(DEFAULT_FALLBACK_ROW_HEIGHT_PX),
+  );
   // ドラッグによる入れ替えが発生した直後の render でだけ FLIP アニメーションを行うためのフラグ
-  // (追加・削除など、入れ替え以外で itemIds が変化したときは何もしない)
+  // (追加・削除など、入れ替え以外で ids が変化したときは何もしない)
   const pendingReorderFlipRef = useRef(false);
 
   const registerItemRef = useCallback(
@@ -77,10 +108,10 @@ export function useTodoDragReorder({
   );
 
   const measureRowHeight = useCallback((id: string): number => {
-    const ids = itemIdsRef.current;
-    const index = ids.indexOf(id);
+    const currentIds = idsRef.current;
+    const index = currentIds.indexOf(id);
     const currentEl = itemElementsRef.current.get(id);
-    const neighborId = ids[index + 1] ?? ids[index - 1];
+    const neighborId = currentIds[index + 1] ?? currentIds[index - 1];
     const neighborEl = neighborId
       ? itemElementsRef.current.get(neighborId)
       : undefined;
@@ -96,7 +127,7 @@ export function useTodoDragReorder({
     }
 
     const height = currentEl?.getBoundingClientRect().height ?? 0;
-    return height > 0 ? height : FALLBACK_ROW_HEIGHT_PX;
+    return height > 0 ? height : DEFAULT_FALLBACK_ROW_HEIGHT_PX;
   }, []);
 
   const resetDragStateRef = useRef<() => void>(() => {});
@@ -111,18 +142,18 @@ export function useTodoDragReorder({
     const deltaY = event.clientY - state.startClientY;
 
     if (state.phase === "pending") {
-      if (Math.abs(deltaY) > MOVE_CANCEL_THRESHOLD_PX) {
+      if (Math.abs(deltaY) > moveCancelThresholdPx) {
         resetDragStateRef.current();
       }
       return;
     }
 
-    const rowHeight = state.rowHeight || FALLBACK_ROW_HEIGHT_PX;
+    const rowHeight = state.rowHeight || DEFAULT_FALLBACK_ROW_HEIGHT_PX;
     const offsetSteps = Math.round(deltaY / rowHeight);
-    const ids = itemIdsRef.current;
+    const currentIds = idsRef.current;
     const targetIndex = Math.max(
       0,
-      Math.min(state.startIndex + offsetSteps, ids.length - 1),
+      Math.min(state.startIndex + offsetSteps, currentIds.length - 1),
     );
 
     if (targetIndex !== state.lastTargetIndex) {
@@ -151,7 +182,9 @@ export function useTodoDragReorder({
     if (state.timeoutId !== null) {
       window.clearTimeout(state.timeoutId);
     }
-    dragStateRef.current = createInitialDragState();
+    dragStateRef.current = createInitialDragState(
+      DEFAULT_FALLBACK_ROW_HEIGHT_PX,
+    );
     detachWindowListeners();
     setDraggingId(null);
     setDragOffsetY(0);
@@ -171,7 +204,7 @@ export function useTodoDragReorder({
       state.pressedId = id;
       state.phase = "pending";
       state.startClientY = event.clientY;
-      state.startIndex = itemIdsRef.current.indexOf(id);
+      state.startIndex = idsRef.current.indexOf(id);
       state.lastTargetIndex = state.startIndex;
 
       window.addEventListener("mousemove", stableMouseMoveHandlerRef.current);
@@ -186,9 +219,9 @@ export function useTodoDragReorder({
         state.rowHeight = measureRowHeight(id);
         setDraggingId(id);
         setDragOffsetY(0);
-      }, LONG_PRESS_MS);
+      }, longPressMs);
     },
-    [measureRowHeight, resetDragState],
+    [longPressMs, measureRowHeight, resetDragState],
   );
 
   useEffect(() => {
@@ -202,7 +235,7 @@ export function useTodoDragReorder({
   }, [detachWindowListeners]);
 
   // ドラッグで入れ替わったアイテムを、旧位置からスライドして新しい位置に収まるようアニメーションさせる(FLIP)。
-  // 追加・削除など入れ替え以外で itemIds が変化したときは、それぞれ専用のアニメーションに任せ、
+  // 追加・削除など入れ替え以外で ids が変化したときは、それぞれ専用のアニメーションに任せ、
   // ここでは位置の基準(prevTops)を更新するだけにして余計な translateY を適用しない。
   useLayoutEffect(() => {
     const elements = itemElementsRef.current;
@@ -211,7 +244,7 @@ export function useTodoDragReorder({
     const shouldAnimate = pendingReorderFlipRef.current;
     pendingReorderFlipRef.current = false;
 
-    for (const id of itemIds) {
+    for (const id of ids) {
       const element = elements.get(id);
       if (!element) {
         continue;
@@ -238,7 +271,7 @@ export function useTodoDragReorder({
       element.style.transform = `translateY(${delta}px)`;
 
       requestAnimationFrame(() => {
-        element.style.transition = REORDER_TRANSITION;
+        element.style.transition = reorderTransition;
         element.style.transform = "";
 
         const clearInlineTransition = () => {
@@ -250,12 +283,37 @@ export function useTodoDragReorder({
     }
 
     prevTopsRef.current = nextTops;
-  }, [itemIds, draggingId]);
+  }, [ids, draggingId, reorderTransition]);
 
-  return {
-    draggingId,
-    dragOffsetY,
-    registerItemRef,
-    handleItemMouseDown,
-  };
+  const getItemProps = useCallback(
+    (id: string): DragReorderItemProps => {
+      const isDragging = draggingId === id;
+      return {
+        ref: (element) => registerItemRef(id, element),
+        onMouseDown: (event) => handleItemMouseDown(id, event),
+        isDragging,
+        style: isDragging
+          ? { transform: `translateY(${dragOffsetY}px)` }
+          : undefined,
+      };
+    },
+    [draggingId, dragOffsetY, handleItemMouseDown, registerItemRef],
+  );
+
+  return useMemo(
+    () => ({
+      draggingId,
+      dragOffsetY,
+      registerItemRef,
+      handleItemMouseDown,
+      getItemProps,
+    }),
+    [
+      draggingId,
+      dragOffsetY,
+      registerItemRef,
+      handleItemMouseDown,
+      getItemProps,
+    ],
+  );
 }

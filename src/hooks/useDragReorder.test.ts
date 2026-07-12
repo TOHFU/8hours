@@ -1,12 +1,12 @@
 import { act, renderHook } from "@testing-library/react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { useTodoDragReorder } from "./useTodoDragReorder";
+import { useDragReorder } from "./useDragReorder";
 
 function createMouseDownEvent(clientY: number): ReactMouseEvent {
   return { button: 0, clientY } as unknown as ReactMouseEvent;
 }
 
-describe("useTodoDragReorder", () => {
+describe("useDragReorder", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -15,10 +15,10 @@ describe("useTodoDragReorder", () => {
     vi.useRealTimers();
   });
 
-  it("1秒未満でマウスを離した場合はドラッグを開始しない", () => {
+  it("300ms未満でマウスを離した場合はドラッグを開始しない", () => {
     const onReorder = vi.fn();
     const { result } = renderHook(() =>
-      useTodoDragReorder({ itemIds: ["a", "b", "c"], onReorder }),
+      useDragReorder({ ids: ["a", "b", "c"], onReorder }),
     );
 
     act(() => {
@@ -26,7 +26,7 @@ describe("useTodoDragReorder", () => {
     });
 
     act(() => {
-      vi.advanceTimersByTime(500);
+      vi.advanceTimersByTime(200);
     });
 
     expect(result.current.draggingId).toBeNull();
@@ -36,16 +36,16 @@ describe("useTodoDragReorder", () => {
     });
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(300);
     });
 
     expect(result.current.draggingId).toBeNull();
   });
 
-  it("1秒以上の長押しでドラッグを開始する", () => {
+  it("300ms以上の長押しでドラッグを開始する", () => {
     const onReorder = vi.fn();
     const { result } = renderHook(() =>
-      useTodoDragReorder({ itemIds: ["a", "b", "c"], onReorder }),
+      useDragReorder({ ids: ["a", "b", "c"], onReorder }),
     );
 
     act(() => {
@@ -53,7 +53,7 @@ describe("useTodoDragReorder", () => {
     });
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(300);
     });
 
     expect(result.current.draggingId).toBe("a");
@@ -65,10 +65,33 @@ describe("useTodoDragReorder", () => {
     expect(result.current.draggingId).toBeNull();
   });
 
+  it("長押し時間はオプションで変更できる", () => {
+    const onReorder = vi.fn();
+    const { result } = renderHook(() =>
+      useDragReorder({ ids: ["a", "b", "c"], onReorder, longPressMs: 1000 }),
+    );
+
+    act(() => {
+      result.current.handleItemMouseDown("a", createMouseDownEvent(0));
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(result.current.draggingId).toBeNull();
+
+    act(() => {
+      vi.advanceTimersByTime(700);
+    });
+
+    expect(result.current.draggingId).toBe("a");
+  });
+
   it("長押し確定前に大きくマウスが動くとドラッグをキャンセルする", () => {
     const onReorder = vi.fn();
     const { result } = renderHook(() =>
-      useTodoDragReorder({ itemIds: ["a", "b", "c"], onReorder }),
+      useDragReorder({ ids: ["a", "b", "c"], onReorder }),
     );
 
     act(() => {
@@ -80,7 +103,7 @@ describe("useTodoDragReorder", () => {
     });
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(300);
     });
 
     expect(result.current.draggingId).toBeNull();
@@ -90,7 +113,7 @@ describe("useTodoDragReorder", () => {
   it("ドラッグ中はマウスのY方向に追従し、しきい値を超えると onReorder を呼ぶ", () => {
     const onReorder = vi.fn();
     const { result } = renderHook(() =>
-      useTodoDragReorder({ itemIds: ["a", "b", "c"], onReorder }),
+      useDragReorder({ ids: ["a", "b", "c"], onReorder }),
     );
 
     act(() => {
@@ -98,7 +121,7 @@ describe("useTodoDragReorder", () => {
     });
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(300);
     });
 
     expect(result.current.draggingId).toBe("a");
@@ -122,7 +145,7 @@ describe("useTodoDragReorder", () => {
   it("入れ替え発生後もアイテムがマウスの実位置に一致し続ける", () => {
     const onReorder = vi.fn();
     const { result } = renderHook(() =>
-      useTodoDragReorder({ itemIds: ["a", "b", "c"], onReorder }),
+      useDragReorder({ ids: ["a", "b", "c"], onReorder }),
     );
 
     act(() => {
@@ -130,7 +153,7 @@ describe("useTodoDragReorder", () => {
     });
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(300);
     });
 
     // フォールバックの行の高さ(49px)分マウスを動かして入れ替えを発生させる
@@ -154,7 +177,7 @@ describe("useTodoDragReorder", () => {
   it("同じマウス位置ではしきい値を跨がない限り onReorder を再度呼ばない", () => {
     const onReorder = vi.fn();
     const { result } = renderHook(() =>
-      useTodoDragReorder({ itemIds: ["a", "b", "c"], onReorder }),
+      useDragReorder({ ids: ["a", "b", "c"], onReorder }),
     );
 
     act(() => {
@@ -162,7 +185,7 @@ describe("useTodoDragReorder", () => {
     });
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(300);
     });
 
     act(() => {
@@ -176,5 +199,33 @@ describe("useTodoDragReorder", () => {
     });
 
     expect(onReorder).not.toHaveBeenCalled();
+  });
+
+  it("getItemProps はドラッグ中のアイテムに transform を含む style を返す", () => {
+    const onReorder = vi.fn();
+    const { result } = renderHook(() =>
+      useDragReorder({ ids: ["a", "b", "c"], onReorder }),
+    );
+
+    expect(result.current.getItemProps("a").isDragging).toBe(false);
+    expect(result.current.getItemProps("a").style).toBeUndefined();
+
+    act(() => {
+      result.current.handleItemMouseDown("a", createMouseDownEvent(0));
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+
+    act(() => {
+      window.dispatchEvent(new MouseEvent("mousemove", { clientY: 15 }));
+    });
+
+    const draggedProps = result.current.getItemProps("a");
+    expect(draggedProps.isDragging).toBe(true);
+    expect(draggedProps.style).toEqual({ transform: "translateY(15px)" });
+
+    expect(result.current.getItemProps("b").isDragging).toBe(false);
   });
 });
