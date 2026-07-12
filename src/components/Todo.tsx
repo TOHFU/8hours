@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import TodoAddButton from "./TodoAddButton";
 import TodoList from "./TodoList";
-import { useTodoDragReorder } from "../hooks/useTodoDragReorder";
+import { useDragReorder } from "../hooks/useDragReorder";
 import { useTodoTransientUi } from "../hooks/useTodoTransientUi";
 import { useTodos } from "../hooks/useTodos";
 import { playToggleOnSound } from "../utils/playToggleSound";
@@ -21,8 +21,8 @@ function Todo({ initialItems, onPersist }: TodoProps) {
     () => todos.items.map((item) => item.id),
     [todos.items],
   );
-  const drag = useTodoDragReorder({
-    itemIds,
+  const drag = useDragReorder({
+    ids: itemIds,
     onReorder: todos.reorderItem,
   });
 
@@ -44,8 +44,7 @@ function Todo({ initialItems, onPersist }: TodoProps) {
         editingId={ui.editingId}
         openMenuId={ui.openMenuId}
         enteringItemId={enteringItemId}
-        draggingId={drag.draggingId}
-        dragOffsetY={drag.dragOffsetY}
+        getDragHandleProps={drag.getItemProps}
         onTextChange={todos.updateText}
         onStartEdit={ui.startEdit}
         onStopEdit={ui.stopEditing}
@@ -53,8 +52,6 @@ function Todo({ initialItems, onPersist }: TodoProps) {
         onColorChange={todos.changeColor}
         onDelete={handleDelete}
         onToggleChecked={todos.toggleChecked}
-        onItemDragMouseDown={drag.handleItemMouseDown}
-        registerItemRef={drag.registerItemRef}
       />
       <TodoAddButton onClick={handleAdd} />
     </div>
