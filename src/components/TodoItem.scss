@@ -122,5 +122,11 @@
     &::after {
       transition: none;
     }
+
+    .todo-item-menu,
+    .todo-item-checkbox,
+    .todo-item-input {
+      cursor: grabbing;
+    }
   }
 }

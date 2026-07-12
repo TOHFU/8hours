@@ -8,7 +8,7 @@ import {
 import type { MouseEvent as ReactMouseEvent } from "react";
 
 /** マウスダウンからこの時間(ms)以上経過するとドラッグを開始する */
-const LONG_PRESS_MS = 1000;
+const LONG_PRESS_MS = 300;
 /** 長押し確定前にこの距離(px)以上動いたら長押しをキャンセルする */
 const MOVE_CANCEL_THRESHOLD_PX = 6;
 /** アイテムの高さが計測できない場合に使うフォールバック値(高さ + gap) */

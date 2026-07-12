@@ -15,7 +15,7 @@ describe("useTodoDragReorder", () => {
     vi.useRealTimers();
   });
 
-  it("1秒未満でマウスを離した場合はドラッグを開始しない", () => {
+  it("300ms未満でマウスを離した場合はドラッグを開始しない", () => {
     const onReorder = vi.fn();
     const { result } = renderHook(() =>
       useTodoDragReorder({ itemIds: ["a", "b", "c"], onReorder }),
@@ -26,7 +26,7 @@ describe("useTodoDragReorder", () => {
     });
 
     act(() => {
-      vi.advanceTimersByTime(500);
+      vi.advanceTimersByTime(200);
     });
 
     expect(result.current.draggingId).toBeNull();
@@ -36,13 +36,13 @@ describe("useTodoDragReorder", () => {
     });
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(300);
     });
 
     expect(result.current.draggingId).toBeNull();
   });
 
-  it("1秒以上の長押しでドラッグを開始する", () => {
+  it("300ms以上の長押しでドラッグを開始する", () => {
     const onReorder = vi.fn();
     const { result } = renderHook(() =>
       useTodoDragReorder({ itemIds: ["a", "b", "c"], onReorder }),
@@ -53,7 +53,7 @@ describe("useTodoDragReorder", () => {
     });
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(300);
     });
 
     expect(result.current.draggingId).toBe("a");
@@ -80,7 +80,7 @@ describe("useTodoDragReorder", () => {
     });
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(300);
     });
 
     expect(result.current.draggingId).toBeNull();
@@ -98,7 +98,7 @@ describe("useTodoDragReorder", () => {
     });
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(300);
     });
 
     expect(result.current.draggingId).toBe("a");
@@ -130,7 +130,7 @@ describe("useTodoDragReorder", () => {
     });
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(300);
     });
 
     // フォールバックの行の高さ(49px)分マウスを動かして入れ替えを発生させる
@@ -162,7 +162,7 @@ describe("useTodoDragReorder", () => {
     });
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(300);
     });
 
     act(() => {
