@@ -28,7 +28,8 @@
         "visible": true,
         "center": true,
         "shadow": false,
-        "acceptFirstMouse": true
+        "acceptFirstMouse": true,
+        "backgroundThrottling": "disabled"
       }
     ],
     "security": {
