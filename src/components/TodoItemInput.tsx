@@ -21,19 +21,31 @@ function TodoItemInput({
   onStopEdit,
 }: TodoItemInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  // 日本語入力の変換確定用 Enter を編集終了と誤認しないよう、
+  // Enter が連続で2回押されたときだけ編集を終了する
+  const pendingEnterConfirmRef = useRef(false);
 
   useEffect(() => {
     if (isEditing) {
       inputRef.current?.focus();
     }
+    pendingEnterConfirmRef.current = false;
   }, [isEditing]);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== "Enter" || event.nativeEvent.isComposing) {
+      pendingEnterConfirmRef.current = false;
       return;
     }
 
     event.preventDefault();
+
+    if (!pendingEnterConfirmRef.current) {
+      pendingEnterConfirmRef.current = true;
+      return;
+    }
+
+    pendingEnterConfirmRef.current = false;
     onStopEdit();
   };
 
@@ -45,7 +57,10 @@ function TodoItemInput({
       placeholder="What needs to be done?"
       className={className}
       readOnly={!isEditing}
-      onChange={(event) => onTextChange(event.target.value)}
+      onChange={(event) => {
+        pendingEnterConfirmRef.current = false;
+        onTextChange(event.target.value);
+      }}
       onDoubleClick={() => {
         if (!isEditing) {
           playTapSound();

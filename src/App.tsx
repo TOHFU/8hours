@@ -1,8 +1,9 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Timer from "./components/Timer";
 import Todo from "./components/Todo";
 import { useAdjustWindowHeight } from "./hooks/useAdjustWindowHeight";
 import { loadAppState, saveAppState } from "./lib/appState";
+import { ensureNotificationPermission } from "./lib/notify";
 import type { PersistedAppState } from "./types/appState";
 import type { TodoItemData } from "./types/todo";
 import "./App.scss";
@@ -11,6 +12,10 @@ function App() {
   const slotRef = useAdjustWindowHeight<HTMLDivElement>();
   const [initialState] = useState(() => loadAppState());
   const appStateRef = useRef<PersistedAppState>(initialState);
+
+  useEffect(() => {
+    void ensureNotificationPermission();
+  }, []);
 
   const persistTimerState = useCallback(
     (

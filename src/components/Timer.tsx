@@ -6,6 +6,11 @@ import {
   playSubTimerCelebrationSound,
   playSubTimerEndSound,
 } from "../utils/playTimerEndSound";
+import {
+  notifyMainTimerEnd,
+  notifySubTimerBreak,
+  notifySubTimerEnd,
+} from "../utils/notifyTimerEnd";
 import { useSoundMute } from "../hooks/useSoundMute";
 import {
   playToggleOffSound,
@@ -47,17 +52,26 @@ function Timer({
     allowOverrun: true,
     autoStart: false,
     initialState: initialMainTimer,
-    onNaturalZeroCross: playMainTimerEndSound,
+    onNaturalZeroCross: () => {
+      playMainTimerEndSound();
+      notifyMainTimerEnd();
+    },
   });
   const subTimer = useTimer({
     totalMs: THIRTY_MINUTES_MS,
     autoStart: false,
     initialState: initialSubTimer,
-    onNaturalZeroCross: playSubTimerEndSound,
+    onNaturalZeroCross: () => {
+      playSubTimerEndSound();
+      notifySubTimerEnd();
+    },
     milestones: [
       {
         atRemainingMs: SUB_TIMER_BREAK_MS,
-        onCross: playSubTimerCelebrationSound,
+        onCross: () => {
+          playSubTimerCelebrationSound();
+          notifySubTimerBreak();
+        },
       },
     ],
   });
