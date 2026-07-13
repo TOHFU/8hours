@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { sendNotification } from "@tauri-apps/plugin-notification";
 import App from "./App";
 import { EIGHT_HOURS_MS, THIRTY_MINUTES_MS } from "./hooks/useTimer";
 import { saveAppState } from "./lib/appState";
@@ -198,57 +199,76 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "PAUSE" })).toBeInTheDocument();
   });
 
-  it("8時間タイマーは 0 秒以降もマイナス表示で進み、0 到達時に終了音を鳴らす", () => {
+  it("8時間タイマーは 0 秒以降もマイナス表示で進み、0 到達時に終了音と通知を出す", async () => {
     render(<App />);
 
-    act(() => {
-      vi.advanceTimersByTime(EIGHT_HOURS_MS);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EIGHT_HOURS_MS);
     });
 
     expect(screen.getByText("00:00:00")).toBeInTheDocument();
     expect(playMainTimerEndSound).toHaveBeenCalledTimes(1);
+    expect(sendNotification).toHaveBeenCalledWith({
+      title: "8hours",
+      body: "8時間経過しました。",
+    });
     expect(screen.getByRole("button", { name: "PAUSE" })).toBeInTheDocument();
 
-    act(() => {
-      vi.advanceTimersByTime(1000);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
     });
 
     expect(screen.getByText("-00:00:01")).toBeInTheDocument();
     expect(playMainTimerEndSound).toHaveBeenCalledTimes(1);
+    expect(sendNotification).toHaveBeenCalledTimes(1);
   });
 
-  it("25分タイマーは 0 到達時に終了音を1回だけ鳴らす", () => {
+  it("25分タイマーは 0 到達時に終了音と通知を1回だけ出す", async () => {
     render(<App />);
     const subTimerButton = screen.getByRole("button", { name: "25" });
 
     fireEvent.click(subTimerButton);
 
-    act(() => {
-      vi.advanceTimersByTime(THIRTY_MINUTES_MS);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(THIRTY_MINUTES_MS);
     });
 
     expect(playSubTimerEndSound).toHaveBeenCalledTimes(1);
+    expect(sendNotification).toHaveBeenCalledWith({
+      title: "8hours",
+      body: "30分経過しました。",
+    });
   });
 
-  it("25分タイマーは25分経過(残り5分)時にお祝いサウンドを1回だけ鳴らす", () => {
+  it("25分タイマーは25分経過(残り5分)時にお祝いサウンドと通知を1回だけ出す", async () => {
     render(<App />);
     const subTimerButton = screen.getByRole("button", { name: "25" });
 
     fireEvent.click(subTimerButton);
 
-    act(() => {
-      vi.advanceTimersByTime(25 * 60 * 1000);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(25 * 60 * 1000);
     });
 
     expect(playSubTimerCelebrationSound).toHaveBeenCalledTimes(1);
     expect(playSubTimerEndSound).not.toHaveBeenCalled();
+    expect(sendNotification).toHaveBeenCalledWith({
+      title: "8hours",
+      body: "25分間、お疲れ様でした。",
+    });
+    expect(sendNotification).toHaveBeenCalledTimes(1);
 
-    act(() => {
-      vi.advanceTimersByTime(5 * 60 * 1000);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5 * 60 * 1000);
     });
 
     expect(playSubTimerCelebrationSound).toHaveBeenCalledTimes(1);
     expect(playSubTimerEndSound).toHaveBeenCalledTimes(1);
+    expect(sendNotification).toHaveBeenCalledWith({
+      title: "8hours",
+      body: "30分経過しました。",
+    });
+    expect(sendNotification).toHaveBeenCalledTimes(2);
   });
 
   it("保存済みの状態からタイマーと TODO を復元する", () => {
