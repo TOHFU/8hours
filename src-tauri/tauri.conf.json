@@ -39,6 +39,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "resources": ["tray.png"],
     "macOS": {
       "signingIdentity": "-",
       "hardenedRuntime": false
