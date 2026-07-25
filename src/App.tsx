@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import Timer from "./components/Timer";
 import Todo from "./components/Todo";
 import { useAdjustWindowHeight } from "./hooks/useAdjustWindowHeight";
@@ -29,6 +30,14 @@ function App() {
         ...timerState,
       };
       saveAppState(appStateRef.current);
+      
+      // Update tray menu with current timer state
+      void invoke("update_timer_state", {
+        mainRemainingMs: timerState.mainTimer.remainingMs,
+        subRemainingMs: timerState.subTimer.remainingMs,
+      }).catch((err) => {
+        console.error("Failed to update timer state in tray:", err);
+      });
     },
     [],
   );
