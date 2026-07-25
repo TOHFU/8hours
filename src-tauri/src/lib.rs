@@ -19,8 +19,10 @@ impl Default for TimerState {
 pub struct AppStateManager {
     pub timer_state: Arc<Mutex<TimerState>>,
     pub dock_icon_visible: Arc<Mutex<bool>>,
+    pub always_on_top: Arc<Mutex<bool>>,
     pub tray_icon: Arc<Mutex<Option<tauri::tray::TrayIcon<tauri::Wry>>>>,
     pub dock_menu_item: Arc<Mutex<Option<tauri::menu::CheckMenuItem<tauri::Wry>>>>,
+    pub always_on_top_item: Arc<Mutex<Option<tauri::menu::CheckMenuItem<tauri::Wry>>>>,
     pub main_timer_item: Arc<Mutex<Option<tauri::menu::MenuItem<tauri::Wry>>>>,
     pub sub_timer_item: Arc<Mutex<Option<tauri::menu::MenuItem<tauri::Wry>>>>,
 }
@@ -30,8 +32,10 @@ impl Default for AppStateManager {
         AppStateManager {
             timer_state: Arc::new(Mutex::new(TimerState::default())),
             dock_icon_visible: Arc::new(Mutex::new(true)),
+            always_on_top: Arc::new(Mutex::new(true)),
             tray_icon: Arc::new(Mutex::new(None)),
             dock_menu_item: Arc::new(Mutex::new(None)),
+            always_on_top_item: Arc::new(Mutex::new(None)),
             main_timer_item: Arc::new(Mutex::new(None)),
             sub_timer_item: Arc::new(Mutex::new(None)),
         }
@@ -143,8 +147,14 @@ pub fn run() {
                 true,
                 true,
                 None::<&str>,
-            )?;
-            let sep1 = tauri::menu::PredefinedMenuItem::separator(app)?;
+            )?;            let always_on_top_item = tauri::menu::CheckMenuItem::with_id(
+                app,
+                "always_on_top",
+                "Always On Top",
+                true,
+                true,
+                None::<&str>,
+            )?;            let sep1 = tauri::menu::PredefinedMenuItem::separator(app)?;
             let main_timer_item = tauri::menu::MenuItem::with_id(
                 app,
                 "main_timer",
@@ -163,13 +173,25 @@ pub fn run() {
             let quit_i = tauri::menu::MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = tauri::menu::Menu::with_items(
                 app,
-                &[&toggle_dock_item, &sep1, &main_timer_item, &sub_timer_item, &sep2, &quit_i],
+                &[
+                    &toggle_dock_item,
+                    &always_on_top_item,
+                    &sep1,
+                    &main_timer_item,
+                    &sub_timer_item,
+                    &sep2,
+                    &quit_i,
+                ],
             )?;
 
             // Store menu item handles for direct updates
             {
                 let mut item = app_state.dock_menu_item.lock().map_err(|e| e.to_string())?;
                 *item = Some(toggle_dock_item);
+            }
+            {
+                let mut item = app_state.always_on_top_item.lock().map_err(|e| e.to_string())?;
+                *item = Some(always_on_top_item);
             }
             {
                 let mut item = app_state.main_timer_item.lock().map_err(|e| e.to_string())?;
@@ -232,6 +254,30 @@ pub fn run() {
                                     {
                                         let mut dock_visible = state.dock_icon_visible.lock().unwrap();
                                         *dock_visible = new_state;
+                                    }
+                                }
+                                "always_on_top" => {
+                                    let new_state = {
+                                        let always_on_top = state.always_on_top.lock().unwrap();
+                                        !*always_on_top
+                                    };
+
+                                    // Update check state
+                                    if let Ok(item_opt) = state.always_on_top_item.lock() {
+                                        if let Some(item) = item_opt.as_ref() {
+                                            let _ = item.set_checked(new_state);
+                                        }
+                                    }
+
+                                    // Update window always_on_top
+                                    if let Some(window) = app.webview_windows().get("main") {
+                                        let _ = window.set_always_on_top(new_state);
+                                    }
+
+                                    // Update state
+                                    {
+                                        let mut always_on_top = state.always_on_top.lock().unwrap();
+                                        *always_on_top = new_state;
                                     }
                                 }
                                 _ => {}
