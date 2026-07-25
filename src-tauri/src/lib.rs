@@ -19,6 +19,8 @@ impl Default for TimerState {
 pub struct AppStateManager {
     pub timer_state: Arc<Mutex<TimerState>>,
     pub dock_icon_visible: Arc<Mutex<bool>>,
+    pub tray_icon: Arc<Mutex<Option<tauri::tray::TrayIcon<tauri::Wry>>>>,
+    pub dock_menu_item: Arc<Mutex<Option<tauri::menu::CheckMenuItem<tauri::Wry>>>>,
 }
 
 impl Default for AppStateManager {
@@ -26,6 +28,8 @@ impl Default for AppStateManager {
         AppStateManager {
             timer_state: Arc::new(Mutex::new(TimerState::default())),
             dock_icon_visible: Arc::new(Mutex::new(true)),
+            tray_icon: Arc::new(Mutex::new(None)),
+            dock_menu_item: Arc::new(Mutex::new(None)),
         }
     }
 }
@@ -89,6 +93,16 @@ fn get_dock_icon_visibility(
     Ok(*dock_visible)
 }
 
+#[tauri::command]
+fn get_timer_display(
+    state: tauri::State<AppStateManager>,
+) -> Result<(String, String), String> {
+    let timer_state = state.timer_state.lock().map_err(|e| e.to_string())?;
+    let main_time = format_time(timer_state.main_remaining_ms);
+    let sub_time = format_time(timer_state.sub_remaining_ms);
+    Ok((main_time, sub_time))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -96,21 +110,29 @@ pub fn run() {
         .setup(|app| {
             use tauri::{
                 image::Image,
-                menu::{Menu, MenuItem},
                 tray::TrayIconBuilder,
                 Manager,
             };
 
-            let _app_state: tauri::State<AppStateManager> = app.state();
+            let app_state: tauri::State<AppStateManager> = app.state();
 
-            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let toggle_dock = MenuItem::with_id(app, "toggle_dock", "✓ Show/Hide Dock Icon", true, None::<&str>)?;
-            
-            let menu = Menu::with_items(app, &[
-                &toggle_dock,
-                &quit_i,
-            ])?;
-            
+            let toggle_dock_item = tauri::menu::CheckMenuItem::with_id(
+                app,
+                "toggle_dock",
+                "Show/Hide Dock Icon",
+                true,
+                true,
+                None::<&str>,
+            )?;
+            let quit_i = tauri::menu::MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let menu = tauri::menu::Menu::with_items(app, &[&toggle_dock_item, &quit_i])?;
+
+            // Store the CheckMenuItem handle for direct updates
+            {
+                let mut item = app_state.dock_menu_item.lock().map_err(|e| e.to_string())?;
+                *item = Some(toggle_dock_item);
+            }
+
             // Build the resource path for the tray icon
             let resource_path = std::env::current_exe()
                 .ok()
@@ -120,13 +142,12 @@ pub fn run() {
                     Some(p.join("Resources").join("tray.png"))
                 })
                 .or_else(|| {
-                    // Fallback for development: try relative path from src-tauri
                     Some(std::path::PathBuf::from("tray.png"))
                 });
 
             if let Some(path) = resource_path {
                 if let Ok(image) = Image::from_path(&path) {
-                    let _tray = TrayIconBuilder::new()
+                    let tray = TrayIconBuilder::new()
                         .icon(image)
                         .menu(&menu)
                         .show_menu_on_left_click(true)
@@ -137,9 +158,32 @@ pub fn run() {
                                     app.exit(0);
                                 }
                                 "toggle_dock" => {
-                                    if let Ok(mut dock_visible) = state.dock_icon_visible.lock() {
-                                        let new_state = !*dock_visible;
-                                        toggle_dock_icon(new_state);
+                                    let new_state = {
+                                        let dock_visible = state.dock_icon_visible.lock().unwrap();
+                                        !*dock_visible
+                                    };
+
+                                    // Update check state BEFORE changing dock policy
+                                    if let Ok(item_opt) = state.dock_menu_item.lock() {
+                                        if let Some(item) = item_opt.as_ref() {
+                                            let _ = item.set_checked(new_state);
+                                        }
+                                    }
+
+                                    // Change dock policy
+                                    toggle_dock_icon(new_state);
+
+                                    // Force re-enable the item after policy change
+                                    // (accessory mode transition can disable menu items)
+                                    if let Ok(item_opt) = state.dock_menu_item.lock() {
+                                        if let Some(item) = item_opt.as_ref() {
+                                            let _ = item.set_enabled(true);
+                                        }
+                                    }
+
+                                    // Update state
+                                    {
+                                        let mut dock_visible = state.dock_icon_visible.lock().unwrap();
                                         *dock_visible = new_state;
                                     }
                                 }
@@ -147,17 +191,22 @@ pub fn run() {
                             }
                         })
                         .build(app)?;
+
+                    // Store tray handle in app state for later menu updates
+                    let mut tray_state = app_state.tray_icon.lock().map_err(|e| e.to_string())?;
+                    *tray_state = Some(tray);
                 } else {
                     eprintln!("Failed to load tray icon from {:?}", path);
                 }
             }
-            
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             update_timer_state,
             toggle_show_dock_icon,
-            get_dock_icon_visibility
+            get_dock_icon_visibility,
+            get_timer_display
         ])
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
