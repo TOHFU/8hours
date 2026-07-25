@@ -149,14 +149,14 @@ pub fn run() {
                 app,
                 "main_timer",
                 "8h : --:--:--",
-                false,
+                true,
                 None::<&str>,
             )?;
             let sub_timer_item = tauri::menu::MenuItem::with_id(
                 app,
                 "sub_timer",
                 "30m : --:--:--",
-                false,
+                true,
                 None::<&str>,
             )?;
             let sep2 = tauri::menu::PredefinedMenuItem::separator(app)?;
