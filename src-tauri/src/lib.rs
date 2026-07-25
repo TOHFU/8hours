@@ -21,6 +21,8 @@ pub struct AppStateManager {
     pub dock_icon_visible: Arc<Mutex<bool>>,
     pub tray_icon: Arc<Mutex<Option<tauri::tray::TrayIcon<tauri::Wry>>>>,
     pub dock_menu_item: Arc<Mutex<Option<tauri::menu::CheckMenuItem<tauri::Wry>>>>,
+    pub main_timer_item: Arc<Mutex<Option<tauri::menu::MenuItem<tauri::Wry>>>>,
+    pub sub_timer_item: Arc<Mutex<Option<tauri::menu::MenuItem<tauri::Wry>>>>,
 }
 
 impl Default for AppStateManager {
@@ -30,6 +32,8 @@ impl Default for AppStateManager {
             dock_icon_visible: Arc::new(Mutex::new(true)),
             tray_icon: Arc::new(Mutex::new(None)),
             dock_menu_item: Arc::new(Mutex::new(None)),
+            main_timer_item: Arc::new(Mutex::new(None)),
+            sub_timer_item: Arc::new(Mutex::new(None)),
         }
     }
 }
@@ -53,7 +57,6 @@ fn toggle_dock_icon(show: bool) {
 #[cfg(not(target_os = "macos"))]
 fn toggle_dock_icon(_show: bool) {}
 
-#[allow(dead_code)]
 fn format_time(ms: u64) -> String {
     let total_seconds = ms / 1000;
     let hours = total_seconds / 3600;
@@ -68,9 +71,26 @@ fn update_timer_state(
     main_remaining_ms: u64,
     sub_remaining_ms: u64,
 ) -> Result<(), String> {
-    let mut timer_state = state.timer_state.lock().map_err(|e| e.to_string())?;
-    timer_state.main_remaining_ms = main_remaining_ms;
-    timer_state.sub_remaining_ms = sub_remaining_ms;
+    {
+        let mut timer_state = state.timer_state.lock().map_err(|e| e.to_string())?;
+        timer_state.main_remaining_ms = main_remaining_ms;
+        timer_state.sub_remaining_ms = sub_remaining_ms;
+    }
+
+    let main_text = format!("8h : {}", format_time(main_remaining_ms));
+    let sub_text = format!("30m : {}", format_time(sub_remaining_ms));
+
+    if let Ok(item_opt) = state.main_timer_item.lock() {
+        if let Some(item) = item_opt.as_ref() {
+            let _ = item.set_text(main_text);
+        }
+    }
+    if let Ok(item_opt) = state.sub_timer_item.lock() {
+        if let Some(item) = item_opt.as_ref() {
+            let _ = item.set_text(sub_text);
+        }
+    }
+
     Ok(())
 }
 
@@ -119,18 +139,45 @@ pub fn run() {
             let toggle_dock_item = tauri::menu::CheckMenuItem::with_id(
                 app,
                 "toggle_dock",
-                "Show/Hide Dock Icon",
+                "Show Dock Icon",
                 true,
                 true,
                 None::<&str>,
             )?;
+            let sep1 = tauri::menu::PredefinedMenuItem::separator(app)?;
+            let main_timer_item = tauri::menu::MenuItem::with_id(
+                app,
+                "main_timer",
+                "8h : --:--:--",
+                false,
+                None::<&str>,
+            )?;
+            let sub_timer_item = tauri::menu::MenuItem::with_id(
+                app,
+                "sub_timer",
+                "30m : --:--:--",
+                false,
+                None::<&str>,
+            )?;
+            let sep2 = tauri::menu::PredefinedMenuItem::separator(app)?;
             let quit_i = tauri::menu::MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let menu = tauri::menu::Menu::with_items(app, &[&toggle_dock_item, &quit_i])?;
+            let menu = tauri::menu::Menu::with_items(
+                app,
+                &[&toggle_dock_item, &sep1, &main_timer_item, &sub_timer_item, &sep2, &quit_i],
+            )?;
 
-            // Store the CheckMenuItem handle for direct updates
+            // Store menu item handles for direct updates
             {
                 let mut item = app_state.dock_menu_item.lock().map_err(|e| e.to_string())?;
                 *item = Some(toggle_dock_item);
+            }
+            {
+                let mut item = app_state.main_timer_item.lock().map_err(|e| e.to_string())?;
+                *item = Some(main_timer_item);
+            }
+            {
+                let mut item = app_state.sub_timer_item.lock().map_err(|e| e.to_string())?;
+                *item = Some(sub_timer_item);
             }
 
             // Build the resource path for the tray icon
