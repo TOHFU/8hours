@@ -1,0 +1,31 @@
+.timer-input {
+  -webkit-app-region: no-drag;
+  position: relative;
+  appearance: none;
+  border: none;
+  background: transparent;
+  min-width: 0;
+  font-family: "Barlow Condensed", "Noto Sans JP", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:read-only {
+    cursor: default;
+  }
+
+  &:not(:read-only) {
+    user-select: text;
+    -webkit-user-select: text;
+    text-overflow: clip;
+  }
+
+  &::placeholder {
+    color: rgba(17, 17, 17, 0.45);
+  }
+}

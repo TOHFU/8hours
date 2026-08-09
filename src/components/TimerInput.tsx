@@ -1,9 +1,9 @@
 import { useEffect, useRef } from "react";
 import useImeSafeDoubleEnterConfirm from "../hooks/useImeSafeDoubleEnterConfirm";
 import { playTapSound } from "../utils/playTapSound";
-import "./TodoItemInput.scss";
+import "./TimerInput.scss";
 
-type TodoItemInputProps = {
+type TimerInputProps = {
   className?: string;
   value: string;
   isEditing: boolean;
@@ -12,14 +12,14 @@ type TodoItemInputProps = {
   onStopEdit: () => void;
 };
 
-function TodoItemInput({
-  className = "todo-item-input",
+function TimerInput({
+  className = "timer-input",
   value,
   isEditing,
   onTextChange,
   onStartEdit,
   onStopEdit,
-}: TodoItemInputProps) {
+}: TimerInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { handleKeyDown, resetPendingConfirm } =
     useImeSafeDoubleEnterConfirm<HTMLInputElement>({
@@ -38,14 +38,14 @@ function TodoItemInput({
       ref={inputRef}
       type="text"
       value={value}
-      placeholder="What needs to be done?"
-      className={className}
+      placeholder="00:00:00"
+      className={className+" timer-input"}
       readOnly={!isEditing}
       onChange={(event) => {
         resetPendingConfirm();
         onTextChange(event.target.value);
       }}
-      onDoubleClick={() => {
+      onClick={() => {
         if (!isEditing) {
           playTapSound();
           onStartEdit();
@@ -57,4 +57,4 @@ function TodoItemInput({
   );
 }
 
-export default TodoItemInput;
+export default TimerInput;

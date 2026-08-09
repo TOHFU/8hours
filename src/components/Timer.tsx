@@ -29,6 +29,21 @@ import "./Timer.scss";
 const SUB_TIMER_BREAK_MS = 5 * 60 * 1000;
 const SUB_TIMER_BREAK_THRESHOLD = SUB_TIMER_BREAK_MS / THIRTY_MINUTES_MS;
 
+function parseClockTextToMs(value: string): number | null {
+  const trimmed = value.trim();
+  const match = trimmed.match(/^(\d+):([0-5]\d):([0-5]\d)$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  const seconds = Number(match[3]);
+
+  return (hours * 3600 + minutes * 60 + seconds) * 1000;
+}
+
 type TimerProps = {
   initialMainTimer: PersistedTimerState;
   initialSubTimer: PersistedTimerState;
@@ -151,6 +166,25 @@ function Timer({
     subTimer.clear();
   };
 
+  const handleMainTimeCommit = (nextMainTime: string) => {
+    const parsedMs = parseClockTextToMs(nextMainTime);
+    if (parsedMs === null) {
+      return;
+    }
+
+    mainTimer.setRemainingMs(parsedMs);
+  };
+
+  const handleSubTimeCommit = (nextSubTime: string) => {
+    const parsedMs = parseClockTextToMs(nextSubTime);
+    if (parsedMs === null) {
+      return;
+    }
+
+    const clampedMs = Math.min(THIRTY_MINUTES_MS, parsedMs);
+    subTimer.setRemainingMs(clampedMs);
+  };
+
   return (
     <div className="timer" data-tauri-drag-region>
       <TimerRound
@@ -158,6 +192,8 @@ function Timer({
         subTime={subTimer.formattedTime}
         showSubTimer={isSubTimerActive}
         isSubTimerInBreak={subTimer.progress <= SUB_TIMER_BREAK_THRESHOLD}
+        onMainTimeCommit={handleMainTimeCommit}
+        onSubTimeCommit={handleSubTimeCommit}
       >
         <TimerArc
           progress={mainTimer.progress}

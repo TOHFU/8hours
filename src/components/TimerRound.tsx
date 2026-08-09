@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import "./TimerRound.scss";
+import TimerInput from "./TimerInput";
 
 type TimerRoundProps = {
   children: ReactNode;
@@ -7,6 +9,8 @@ type TimerRoundProps = {
   subTime?: string;
   showSubTimer?: boolean;
   isSubTimerInBreak?: boolean;
+  onMainTimeCommit?: (nextMainTime: string) => void;
+  onSubTimeCommit?: (nextSubTime: string) => void;
 };
 
 function TimerRound({
@@ -15,7 +19,36 @@ function TimerRound({
   subTime = "00:00:00",
   showSubTimer = false,
   isSubTimerInBreak = false,
+  onMainTimeCommit,
+  onSubTimeCommit,
 }: TimerRoundProps) {
+  const [isMainEditing, setIsMainEditing] = useState(false);
+  const [mainDraftTime, setMainDraftTime] = useState(mainTime);
+  const [isSubEditing, setIsSubEditing] = useState(false);
+  const [subDraftTime, setSubDraftTime] = useState(subTime);
+
+  useEffect(() => {
+    if (!isMainEditing) {
+      setMainDraftTime(mainTime);
+    }
+  }, [isMainEditing, mainTime]);
+
+  useEffect(() => {
+    if (!isSubEditing) {
+      setSubDraftTime(subTime);
+    }
+  }, [isSubEditing, subTime]);
+
+  const stopMainEdit = () => {
+    setIsMainEditing(false);
+    onMainTimeCommit?.(mainDraftTime);
+  };
+
+  const stopSubEdit = () => {
+    setIsSubEditing(false);
+    onSubTimeCommit?.(subDraftTime);
+  };
+
   return (
     <div className="timer-round">
       <div className="timer-round-dial-hours">
@@ -41,15 +74,25 @@ function TimerRound({
         )}
       </div>
       <div className="timer-round-center" data-tauri-drag-region>
-        <p className="timer-round-center-time">{mainTime}</p>
+        <TimerInput
+          className="timer-round-center-time"
+          value={mainDraftTime}
+          isEditing={isMainEditing}
+          onTextChange={setMainDraftTime}
+          onStartEdit={() => setIsMainEditing(true)}
+          onStopEdit={stopMainEdit}
+        />
         {showSubTimer && (
-          <p
+          <TimerInput
             className={`timer-round-center-time time-25${
               isSubTimerInBreak ? " time-25-break" : ""
             }`}
-          >
-            {subTime}
-          </p>
+            value={subDraftTime}
+            isEditing={isSubEditing}
+            onTextChange={setSubDraftTime}
+            onStartEdit={() => setIsSubEditing(true)}
+            onStopEdit={stopSubEdit}
+          />
         )}
       </div>
     </div>
