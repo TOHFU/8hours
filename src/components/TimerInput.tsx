@@ -51,7 +51,11 @@ function TimerInput({
           onStartEdit();
         }
       }}
-      onBlur={onStopEdit}
+      onBlur={() => {
+        if (isEditing) {
+          onStopEdit();
+        }
+      }}
       onKeyDown={handleKeyDown}
     />
   );
