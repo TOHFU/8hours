@@ -232,6 +232,32 @@ export function useTimer({
     });
   }, [allowOverrun]);
 
+  const setRemainingMsManually = useCallback(
+    (nextRemainingMs: number) => {
+      const sanitizedRemainingMs = allowOverrun
+        ? Math.trunc(nextRemainingMs)
+        : Math.max(0, Math.trunc(nextRemainingMs));
+
+      previousRemainingRef.current = sanitizedRemainingMs;
+      setRemainingMs(sanitizedRemainingMs);
+
+      if (!allowOverrun && sanitizedRemainingMs === 0) {
+        endTimeMsRef.current = null;
+        setIsRunning(false);
+        return;
+      }
+
+      if (isRunning) {
+        endTimeMsRef.current = Date.now() + sanitizedRemainingMs;
+        lastSyncAtRef.current = Date.now();
+        return;
+      }
+
+      endTimeMsRef.current = null;
+    },
+    [allowOverrun, isRunning],
+  );
+
   const getPersistedState = useCallback((): TimerInitialState & {
     endTimeMs: number | null;
   } => {
@@ -262,6 +288,7 @@ export function useTimer({
     reset,
     clear,
     togglePause,
+    setRemainingMs: setRemainingMsManually,
     getPersistedState,
   };
 }
