@@ -173,7 +173,8 @@ function Timer({
       return;
     }
 
-    mainTimer.setRemainingMs(parsedMs);
+    const clampedMs = Math.min(EIGHT_HOURS_MS, parsedMs);
+    mainTimer.setRemainingMs(clampedMs);
   };
 
   const handleSubTimeCommit = (nextSubTime: string) => {
