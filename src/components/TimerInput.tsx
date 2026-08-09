@@ -38,9 +38,7 @@ function TimerInput({
       ref={inputRef}
       type="text"
       value={value}
-      placeholder="00:00:00"
-      className={className+" timer-input"}
-      readOnly={!isEditing}
+      className={/\btimer-input\b/.test(className) ? className : `${className} timer-input`}
       onChange={(event) => {
         resetPendingConfirm();
         onTextChange(event.target.value);
