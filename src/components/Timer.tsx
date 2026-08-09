@@ -31,7 +31,7 @@ const SUB_TIMER_BREAK_THRESHOLD = SUB_TIMER_BREAK_MS / THIRTY_MINUTES_MS;
 
 function parseClockTextToMs(value: string): number | null {
   const trimmed = value.trim();
-  const match = trimmed.match(/^(\d+):([0-5]\d):([0-5]\d)$/);
+  const match = trimmed.match(/^(\d{1,2}):([0-5]\d):([0-5]\d)$/);
 
   if (!match) {
     return null;
@@ -40,8 +40,9 @@ function parseClockTextToMs(value: string): number | null {
   const hours = Number(match[1]);
   const minutes = Number(match[2]);
   const seconds = Number(match[3]);
+  const ms = (hours * 3600 + minutes * 60 + seconds) * 1000;
 
-  return (hours * 3600 + minutes * 60 + seconds) * 1000;
+  return Number.isSafeInteger(ms) ? ms : null;
 }
 
 type TimerProps = {
